@@ -33,7 +33,7 @@ def csv_handler(in_file_path, out_file_path):
     # new_file_path = os.path.join(os.getcwd(), 'sheets', 'new_' + file_name)
 
     with open(in_file_path, 'r', encoding='gbk') as csv_in, \
-         open(out_file_path, 'w', encoding='gbk') as csv_out:
+         open(out_file_path, 'w', encoding='gbk', newline='') as csv_out:
 
         reader = csv.reader(csv_in, delimiter=',')
         writer = csv.writer(csv_out, delimiter=',')
