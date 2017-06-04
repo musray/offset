@@ -5,7 +5,7 @@ import sys
 from operator import itemgetter
 
 
-def sort_csv(csv_reader):
+def sort_datalink(csv_reader):
     # csv_reader是一个csv.reader的object
 
     # 把csv的reader转化成一个list
@@ -35,7 +35,23 @@ def sort_csv(csv_reader):
     return sorted_csv_list
 
 
-def datalink_offset_calc(csv_list):
+def sort_firmnet(csv_reader):
+    csv_list = list(csv_reader)
+    # firmnet点表的排序方法：
+    # 1. 按direction列（表格第2列）排序，只看Send
+    # 2. 按node排序（表格第1列），相同节点的Send在一起
+    # 3. 按offset1排序（升序）
+
+    # 由于firmnet中的偏移地址，有些是int，有些是str（这是一个坑）
+    # 所以这里先把offset1中的值全都变成int，再执行排序，否则排序结果是乱的
+    for row in csv_list:
+        row[6] = int(row[6])
+
+    sorted_csv_list = sorted(csv_list, key=itemgetter(1, 0, 6))
+    return sorted_csv_list
+
+
+def datalink_offset_calc(data_list):
     # offset计算规则
     # 1. csv_list已经是按要求排序过了的
     # 2. 以"网口"为单位，内进行offset计算
@@ -62,7 +78,7 @@ def datalink_offset_calc(csv_list):
     # offset增量（取决于上一行的数据类型）
     increment = 0
 
-    for row in csv_list:
+    for row in data_list:
         # 如果该行是datalink：
         if not row[10]:
             # 生成一个全"站"唯一的网口号：机柜号+机笼号+槽号+端口号
@@ -83,12 +99,30 @@ def datalink_offset_calc(csv_list):
                 # 一个端口的第一个数据点，offset值从0开始
                 row[11] = 0
 
-    return csv_list
+    return data_list
 
 
-def firmnet_offset_calc(csv_file):
-    # TODO 增加规则
-    return csv_file
+def firmnet_offset_calc(data_list):
+    # firmnet offset的计算规则
+    # 1. 如果row[1]不是Send类型，该行不做处理
+    # 2. 如果row[1]是Send类型，则：
+    #    - 如果站号是第一次遇到，则: 记录row[6]的值，作为decrement_value; row[6] = 0
+    #    - 如果站号不是第一次遇到，则：row[6] -= decrement_value
+
+    # 新建一个node列表
+    node_list = []
+
+    for row in data_list:
+        if row[1].lower() == 'send':
+            # TODO
+            if row[0] in node_list:
+                row[6] = int(row[6]) - decrement
+            else:
+                node_list.append(row[0])
+                decrement = int(row[6])
+                row[6] = 0
+
+    return data_list
 
 
 def csv_handler(in_file_path, out_file_path):
@@ -102,23 +136,33 @@ def csv_handler(in_file_path, out_file_path):
         reader = csv.reader(csv_in, delimiter=',')
         writer = csv.writer(csv_out, delimiter=',')
 
-        # 先写header，增加title
-        header = next(reader)
-        header[-1] = '偏移'
-        writer.writerow(header)
+        # 如果文件是datalink清单
+        if 'netdev' in in_file_path.lower():
 
-        # 生成一个排序后的csv数据list
-        sorted_csv_list = sort_csv(reader)
+            # 先写header，增加title
+            header = next(reader)
+            header[-1] = '偏移'
+            writer.writerow(header)
 
-        # 为datalink类型数据生成offset
-        list_with_datalink_offset = datalink_offset_calc(sorted_csv_list)
+            # 生成一个排序后的csv数据list
+            sorted_csv_list = sort_datalink(reader)
+            # 为datalink类型数据生成offset
+            list_with_offset = datalink_offset_calc(sorted_csv_list)
 
-        # 为firmnet类型数据生成offset
-        list_with_firmnet_offset = firmnet_offset_calc(list_with_datalink_offset)
+        # 如果文件是firmnet清单
+        elif 'download' in in_file_path.lower():
 
-        # 计算每一行的偏移地址
-        for row in list_with_firmnet_offset:
-            writer.writerow(row)
+            # header不需要处理，直接写到writer里去
+            header = next(reader)
+            writer.writerow(header)
+
+            # 根据Firmnet的排序要求，对数据进行排序
+            sorted_csv_list = sort_firmnet(reader)
+            # 为firmnet类型数据生成offset
+            list_with_offset = firmnet_offset_calc(sorted_csv_list)
+
+        # 将生成的最终数据写入目标文件
+        writer.writerows(list_with_offset)
 
 
 def main():
