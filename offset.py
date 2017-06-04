@@ -2,29 +2,93 @@
 import os
 import csv
 import sys
+from operator import itemgetter
 
 
-def datalink_offset_calc(allocator, signal_type):
-    # allocator: 累加的偏移地址
-    # signal_type: csv第2列（0起）的值。
+def sort_csv(csv_reader):
+    # csv_reader是一个csv.reader的object
 
-    bool_signal_length = 2
-    device_signal_length = 2
-    real_signal_length = 8
+    # 把csv的reader转化成一个list
+    csv_list = list(csv_reader)
 
-    if signal_type == 'bool_signal':
-        allocator += bool_signal_length
-    elif signal_type == 'device_signal':
-        allocator += device_signal_length
-    elif signal_type == 'real_signal':
-        allocator += real_signal_length
+    # 根据技术部给的文档，"数据类型"的排列是固定顺序的，次序如下：
+    data_type = ['real_signal', 'int_signal', 'real', 'bool_signal', 'int', 'bool', 'device_signal']
 
-    return allocator
+    for row in csv_list:
+        # 如果说明列没有内容，说明是datalink的点
+        if not row[10]:
+            # 在数据类型清单中，查该row数据类型对应的index，增加到row的最后
+            row.extend([data_type.index(row[2])])
+        # 如果说明列有内容，说明是环网点
+        else:
+            # 将100添加到row的最后。（实际这个地方填什么值都行）
+            row.extend([100])
+
+    # 经过以上的处理，csv的数据从11列变成了12列(12列就是辅助列)
+    # 根据6, 7, 8, 9, 12列的优先顺序，进行排序，并返回
+    sorted_csv_list = sorted(csv_list, key=itemgetter(6, 7, 8, 9, 12))
+
+    # 最后把辅助列删掉
+    for row in sorted_csv_list:
+        row.pop()
+
+    return sorted_csv_list
 
 
-def firmnet_offset_calc(allocator):
-    # 增加规则
-    return allocator
+def datalink_offset_calc(csv_list):
+    # offset计算规则
+    # 1. csv_list已经是按要求排序过了的
+    # 2. 以"网口"为单位，内进行offset计算
+    # 4. 每个网口的第一个信号，起始地址都是0
+    # 5. 第n+1个信号，其offset是offset(n) + DATA_LENGTH
+    # 6. DATA_LENGTH长度是固定的，见下面的具体定义
+
+    # 定义数据类型的长度
+    data_length = {
+        'real_signal': 8,
+        'real': 4,
+        'int_signal': 4,
+        'bool_signal': 2,
+        'int': 2,
+        'bool': 1,
+        'device_signal': 4
+    }
+
+
+    # 定义一个对网口的记录
+    port_list = []
+    # 起始offset
+    start_value = 0
+    # offset增量（取决于上一行的数据类型）
+    increment = 0
+
+    for row in csv_list:
+        # 如果该行是datalink：
+        if not row[10]:
+            # 生成一个全"站"唯一的网口号：机柜号+机笼号+槽号+端口号
+            port = str(row[7]) + str(row[8]) + str(row[9]) + str(row[10])
+            # 如果改行的网口号，不是第一次出现：
+            if port in port_list:
+                start_value += increment
+                row[11] = start_value
+                increment = data_length[row[2]]
+            # 如果改行网口号是第一次出现：
+            else:
+                # 有必要再赋值一遍，因为在进入下一个网口的时候，这个值需要从0开始
+                start_value = 0
+                # 记录下increment，给下一行用
+                increment = data_length[row[2]]
+                # 记录下这个端口号
+                port_list.append(port)
+                # 一个端口的第一个数据点，offset值从0开始
+                row[11] = 0
+
+    return csv_list
+
+
+def firmnet_offset_calc(csv_file):
+    # TODO 增加规则
+    return csv_file
 
 
 def csv_handler(in_file_path, out_file_path):
@@ -43,22 +107,18 @@ def csv_handler(in_file_path, out_file_path):
         header[-1] = '偏移'
         writer.writerow(header)
 
-        # 定义该站的各个站点
-        datalink_allocator = 0
-        firmnet_allocator = 0
+        # 生成一个排序后的csv数据list
+        sorted_csv_list = sort_csv(reader)
+
+        # 为datalink类型数据生成offset
+        list_with_datalink_offset = datalink_offset_calc(sorted_csv_list)
+
+        # 为firmnet类型数据生成offset
+        list_with_firmnet_offset = firmnet_offset_calc(list_with_datalink_offset)
 
         # 计算每一行的偏移地址
-        for row in reader:
-            if row[10]:
-                # row[10]有内容，说明这一行是环网
-                # firmnet有哪些具体规则？
-                pass
-            else:
-                # row[10]没内容，说明这一行是datalink
-                # datalink有哪些具体规则？
-                datalink_allocator = datalink_offset_calc(datalink_allocator, row[2])
-                row[-1] = datalink_allocator
-                writer.writerow(row)
+        for row in list_with_firmnet_offset:
+            writer.writerow(row)
 
 
 def main():
