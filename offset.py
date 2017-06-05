@@ -79,10 +79,11 @@ def datalink_offset_calc(data_list):
     increment = 0
 
     for row in data_list:
+
         # 如果该行是datalink：
-        if not row[10]:
+        if not ('环点' in row[10]):
             # 生成一个全"站"唯一的网口号：机柜号+机笼号+槽号+端口号
-            port = str(row[7]) + str(row[8]) + str(row[9]) + str(row[10])
+            port = str(row[6]) + str(row[7]) + str(row[8]) + str(row[9])
             # 如果改行的网口号，不是第一次出现：
             if port in port_list:
                 start_value += increment
