@@ -107,10 +107,10 @@ def firmnet_offset_calc(data_list):
     # firmnet offset的计算规则
     # 1. 如果row[1]不是Send类型，该行不做处理
     # 2. 如果row[1]是Send类型，则：
-    #    - 如果站号是第一次遇到，则: 记录row[6]的值，作为decrement_value; row[6] = 0
-    #    - 如果站号不是第一次遇到，则：row[6] -= decrement_value
+    #    - 如果站号(node)是第一次遇到，则: 记录row[6]的值，作为decrement_value; row[6] = 0
+    #    - 如果站号(node)不是第一次遇到，则：row[6] -= decrement_value
 
-    # 新建一个node列表
+    # 新建一个站号node列表
     node_list = []
 
     for row in data_list:
@@ -170,15 +170,17 @@ def main():
     # 如果当前文件夹内不存在offset文件夹
     # 则新建文件夹
     if not os.path.isdir('offset'):
+        input('没有发现 offset 文件夹，已为你新建。\n请将csv文件放入其中，再运行本程序。\n按任意键退出...')
         os.mkdir('offset')
+        sys.exit(1)
 
     # 遍历给定文件夹内的所有文件
     # 如果是csv文件，则：
     #   - 挨个处理
-    csvfiles = os.listdir('./offset')
+    csvfiles = [item for item in os.listdir('./offset') if '.csv' == item[-4:].lower()]
 
     if len(csvfiles) == 0:
-        input('在offset文件夹中没有待处理的文件，按任意键退出。')
+        input('在offset文件夹中没有待处理的文件，按任意键退出...')
         sys.exit(1)
 
     for csvfile in csvfiles:
