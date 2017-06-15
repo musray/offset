@@ -44,10 +44,10 @@ def sort_firmnet(csv_reader):
         row[6] = int(row[6])
 
     # firmnet点表的排序规则：
-    # 1. 按direction列（表格第2列）排序，只看Send
-    # 2. 按node排序（表格第1列），相同节点的Send在一起
-    # 3. 按offset1排序（升序）
-    sorted_csv_list = sorted(csv_list, key=itemgetter(1, 0, 6))
+    # 1. 按node排序（表格第0列），保证相同节点的放在一起
+    # 2. 按offset1（表格第6列）排序，升序
+    # 3. 排序之后，在同一node内，send和dss就按照offset值的升序排列了
+    sorted_csv_list = sorted(csv_list, key=itemgetter(0, 6))
     return sorted_csv_list
 
 
@@ -104,20 +104,29 @@ def datalink_offset_calc(data_list):
 
 
 def firmnet_offset_calc(data_list):
+    # TODO
+    # 1. dss类信号，要计算偏移地址
+
     # firmnet offset的计算规则
-    # 1. 如果row[1]不是Send类型，该行不做处理
-    # 2. 如果row[1]是Send类型，则：
+    # 1. 如果row[1]不是send或dss类型，该行不做处理
+    # 2. 如果row[1]是send或dss类型，则：
     #    - 如果站号(node)是第一次遇到，则: 记录row[6]的值，作为decrement_value; row[6] = 0
     #    - 如果站号(node)不是第一次遇到，则：row[6] -= decrement_value
 
     # 新建一个站号node列表
     node_list = []
 
+    # 生成一个用于修正偏移地址的递减值
+    # 在正式的数据处理中，每一个node的现有最小偏移地址，会赋给decrement
+    decrement = 0
+
     for row in data_list:
-        if row[1].lower() == 'send':
-            # TODO
+        # 如果 direction 列的内容是 send 或 dss（dss是device signal的send信号）
+        if row[1].lower() == 'send' or row[1].lower() == 'dss':
+            # 该节点的第2行至最后一行
             if row[0] in node_list:
                 row[6] = int(row[6]) - decrement
+            # 该节点的第1行
             else:
                 node_list.append(row[0])
                 decrement = int(row[6])
