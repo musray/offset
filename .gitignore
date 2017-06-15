@@ -1,3 +1,6 @@
 offset/*
 sync/*
 trial/*
+*.exe
+.DS_Store
+.ieda/
