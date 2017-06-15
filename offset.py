@@ -16,7 +16,7 @@ def sort_datalink(csv_reader):
 
     for row in csv_list:
         # 如果说明列没有内容，说明是datalink的点
-        if not row[10]:
+        if not ('环点' in row[10]):
             # 在数据类型清单中，查该row数据类型对应的index，增加到row的最后
             row.extend([data_type.index(row[2])])
         # 如果说明列有内容，说明是环网点
@@ -37,16 +37,16 @@ def sort_datalink(csv_reader):
 
 def sort_firmnet(csv_reader):
     csv_list = list(csv_reader)
-    # firmnet点表的排序方法：
-    # 1. 按direction列（表格第2列）排序，只看Send
-    # 2. 按node排序（表格第1列），相同节点的Send在一起
-    # 3. 按offset1排序（升序）
 
     # 由于firmnet中的偏移地址，有些是int，有些是str（这是一个坑）
     # 所以这里先把offset1中的值全都变成int，再执行排序，否则排序结果是乱的
     for row in csv_list:
         row[6] = int(row[6])
 
+    # firmnet点表的排序规则：
+    # 1. 按direction列（表格第2列）排序，只看Send
+    # 2. 按node排序（表格第1列），相同节点的Send在一起
+    # 3. 按offset1排序（升序）
     sorted_csv_list = sorted(csv_list, key=itemgetter(1, 0, 6))
     return sorted_csv_list
 
@@ -179,19 +179,25 @@ def main():
     #   - 挨个处理
     csvfiles = [item for item in os.listdir('./offset') if '.csv' == item[-4:].lower()]
 
+    # 在offset文件夹中没有csv文件
     if len(csvfiles) == 0:
         input('在offset文件夹中没有待处理的文件，按任意键退出...')
         sys.exit(1)
 
+    hasTarget = False
     for csvfile in csvfiles:
-        if csvfile[-3: ].lower() == 'csv' and csvfile[ :6].lower() != 'offset':
+        if csvfile[:6].lower() == 'netdev' or csvfile[:8].lower() == 'download':
+            hasTarget = True
             # print('\nDEBUG')
             # print(csvfile)
             in_file_path = os.path.join(os.getcwd(), 'offset', csvfile)
             out_file_path = os.path.join(os.getcwd(), 'offset', 'offset_' + csvfile)
             csv_handler(in_file_path, out_file_path)
             print(os.path.basename(csvfile) + ' 处理完毕')
-    input('按任意键退出...')
+    if hasTarget:
+        input('按任意键退出...')
+    else:
+        input('在 offset 文件夹中没有 DEVNET 或 DOWNLOAD 类的 csv 文件。按任意键退出...')
 
 if __name__ == '__main__':
     main()
