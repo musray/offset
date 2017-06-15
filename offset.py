@@ -104,8 +104,6 @@ def datalink_offset_calc(data_list):
 
 
 def firmnet_offset_calc(data_list):
-    # TODO
-    # 1. dss类信号，要计算偏移地址
 
     # firmnet offset的计算规则
     # 1. 如果row[1]不是send或dss类型，该行不做处理
@@ -128,9 +126,9 @@ def firmnet_offset_calc(data_list):
                 row[6] = int(row[6]) - decrement
             # 该节点的第1行
             else:
-                node_list.append(row[0])
-                decrement = int(row[6])
-                row[6] = 0
+                node_list.append(row[0])  # row[0]是node号
+                decrement = int(row[6])   # row[6]是原offset
+                row[6] = 0                # 将该行offset设为0
 
     return data_list
 
@@ -201,8 +199,14 @@ def main():
             # print(csvfile)
             in_file_path = os.path.join(os.getcwd(), 'offset', csvfile)
             out_file_path = os.path.join(os.getcwd(), 'offset', 'offset_' + csvfile)
+
+            # 调用csv_handler
             csv_handler(in_file_path, out_file_path)
+
+            # 每一个文件处理万之后，hint一下用户
             print(os.path.basename(csvfile) + ' 处理完毕')
+
+    # 如果没有名称中带有 netdev 或者 download 的文件，要hint一下
     if hasTarget:
         input('按任意键退出...')
     else:
