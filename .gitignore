@@ -4,3 +4,5 @@ trial/*
 *.exe
 .DS_Store
 .idea/
+dist/*
+*.swp
