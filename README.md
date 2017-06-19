@@ -37,7 +37,7 @@
 ## 已知约束
 1. 从 EAST 导出的 NETDEV.csv 文件，不可以使用 Excel 进行编辑和保存、保存。<br>**原因**：用 Excel 保存之后，csv 中原有的最一个逗号会被删除，导致文件处理过程中发生 list out of range 错误。（代码里使用了精确的行列关系进行csv文件操作）
 
-### 开发相关
+## 开发相关
 1. 如何生成exe文件? `$ pyinstaller offset.py --oneline`
 2. `clear_folder.py`的作用？<br>即使使用 --oneline 选项，pyinstaller也会生成很多附加的文件或文件夹。<br>clear_folder.py脚本，在每次执行 pyinstaller 之后运行一次，用来清理没用的文件夹，并把`/dist`中的可执行文件剪切到项目根目录。
 
@@ -46,5 +46,5 @@
 2. 【DONE】~~验证：~~
     - ~~代码计算出来的 datalink/recv 偏移量，和其对应的send值是否相等？~~
     - ~~查查环网中，一共有多少种数据类型(send, recv, dss?, dsr?)~~
-3. 在等待文件处理时的stdout增加动画（完全是没有用的feature）
+3. 在等待文件处理时的stdout增加动画（像是完全是没有用的feature）
 4. 完成`clear_folder.py`
