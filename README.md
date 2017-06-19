@@ -5,6 +5,7 @@
 ### 偏移地址生成原则
 1. datalink 的点，无论 send 还是 recv，都用规则直接计算。
 2. firmnet 上的点，send 和 dss 用规则计算。recv 和 dsr，根据 send 和 dss 进行查找复制。
+
 ### 项目结构
 1. 主要由两个`.py`文件组成
 2. `offset.py`：基于EAST通信清单（ netdev 和 download ），计算偏移地址，并生成新文件。（offset 开头）

@@ -94,7 +94,7 @@ def sync_offset(netdev_file, firmnet_data):
     path, basename = os.path.split(netdev_file)
     new_file = os.path.join(path, 'sync_' + basename)
     with open(netdev_file, 'r', encoding='gbk') as in_file, \
-         open(new_file, 'w', encoding='gbk') as out_file:
+         open(new_file, 'w', encoding='gbk', newline='') as out_file:
 
         # 把csv的内容读出来
         netdev_list = list(csv.reader(in_file))
