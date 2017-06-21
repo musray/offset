@@ -15,7 +15,7 @@ def sort_datalink(csv_reader):
     data_type = ['real_signal', 'int_signal', 'real', 'bool_signal', 'int', 'bool', 'device_signal']
 
     for row in csv_list:
-        # 如果说明列没有内容，说明是datalink的点
+        # 如果说明列中的内容带有"环点"，说明是环网的点；否则为datalink的点
         if not ('环点' in row[10]):
             # 在数据类型清单中，查该row数据类型对应的index，增加到row的最后
             row.extend([data_type.index(row[2])])

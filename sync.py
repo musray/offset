@@ -121,8 +121,7 @@ def sync_offset(netdev_file, firmnet_data):
 
 def get_firmnet_data(firmnet_files):
     # 把firmnet文件挨个打开，存到一个三维list中
-    # 问题：如果只有三维list，如何确保firmnet1, 2, 3, 4的数据在三维数组中的排列顺序？
-    # 如果不用三维数组，用dict，也许能比较好的解决这个问题
+    # 问题：如果只有三维list，如何确保firmnet1, 2, 3, 4的数据在三维数组中的排列顺序？（答案：在代码里找）
     firmnet_data = [[], [], [], []]
     for firmnet_file in firmnet_files:
         with open(firmnet_file, 'r', encoding='gbk') as f_f:
