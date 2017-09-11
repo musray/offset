@@ -50,7 +50,7 @@ def sort_firmnet(csv_reader):
     sorted_csv_list = sorted(csv_list, key=itemgetter(0, 6))
     return sorted_csv_list
 
-def offset_value(start, increment, type):
+def datalink_offset_gen(start, increment, data_lenght):
     '''
     :param start:  上一个通信点的偏移地址
     :param increment: 上一个通信点的数据类型长度
@@ -58,20 +58,24 @@ def offset_value(start, increment, type):
     :return: int, 本通信点的偏移地址
     '''
 
+    #
+    # 如果点对点的offset，有被n整除的需求
+    # 直接把下面的代码uncommnet
+    #
     # 先不考虑被4整除的问题，算出一个基础的偏移地址
-    base_value = start + increment
+    # base_value = start + increment
     # 如果base_value大于当前通信点的数据类型长度
-    if base_value > type:
+    # if base_value > data_lenght:
         # 如果base_value不能被type整除
-        while base_value % type != 0:
-            base_value += 1
+        # while base_value % data_lenght != 0:
+        #     base_value += 1
     # 如果base_value小于type
-    elif base_value <= type:
+    # elif base_value <= data_lenght:
         # base_value加1，直到其等于type为止
-        while base_value != type:
-            base_value += 1
+        # while base_value != data_lenght:
+        #     base_value += 1
 
-    return base_value
+    return start + increment
 
 
 def datalink_offset_calc(data_list):
@@ -115,7 +119,7 @@ def datalink_offset_calc(data_list):
 
                 # 如果该行的网口号，不是第一次出现：
                 if port in port_list:
-                    row[11] = offset_value(start_value, increment, data_length[row[2]][1])
+                    row[11] = datalink_offset_gen(start_value, increment, data_length[row[2]][1])
                     # 当前点的offset，保存为start_value，下一轮使用
                     start_value = row[11]
                     # 该行通信点的数据长度，作为下一轮的increment
@@ -134,6 +138,26 @@ def datalink_offset_calc(data_list):
     return data_list
 
 
+def offset_gen(base_value, data_lenght):
+    '''
+    :param base_value: 
+    :param data_lenght: 
+    :return: 
+    '''
+
+    # 如果base_value大于当前通信点的数据类型长度
+    if base_value > data_lenght:
+        # 如果base_value不能被data_length整除
+        while base_value % data_lenght != 0:
+            base_value += 1
+    # 如果base_value小于type
+    elif base_value <= data_lenght:
+        # base_value加1，直到其等于type为止
+        while base_value != data_lenght:
+            base_value += 1
+
+    return base_value
+
 def firmnet_offset_calc(data_list):
 
     # firmnet offset的计算规则
@@ -142,6 +166,15 @@ def firmnet_offset_calc(data_list):
     #    - 如果站号(node)是第一次遇到，则: 记录row[6]的值，作为decrement_value; row[6] = 0
     #    - 如果站号(node)不是第一次遇到，则：row[6] -= decrement_value
 
+    data_length = {
+        'real_signal': [8, 4],
+        'real': [4, 4],
+        'int_signal': [4, 4],
+        'bool_signal': [2, 2],
+        'int': [2, 2],
+        'bool': [1, 1],
+        'device_signal': [4, 4]
+    }
     # 新建一个站号node列表
     node_list = []
 
@@ -154,11 +187,12 @@ def firmnet_offset_calc(data_list):
         if row[1].lower() == 'send' or row[1].lower() == 'dss':
             # 该节点的第2行至最后一行
             if row[0] in node_list:
-                row[6] = int(row[6]) - decrement
+                base_value = int(row[6]) - decrement
+                row[6] = offset_gen(base_value, data_length[row[3]][1])
             # 该节点的第1行
             else:
                 node_list.append(row[0])  # row[0]是node号
-                decrement = int(row[6])   # row[6]是原offset
+                decrement = int(row[6])   # row[6]是节点第一行的原offset
                 row[6] = 0                # 将该行offset设为0
 
     return data_list
