@@ -81,27 +81,30 @@ def datalink_offset_calc(data_list):
     increment = 0
 
     for row in data_list:
-
-        # 如果该行是datalink：
+        # 如果该行是datalink
         if not ('环点' in row[10]):
-            # 生成一个全"站"唯一的网口号：机柜号+机笼号+槽号+端口号
-            port = str(row[6]) + str(row[7]) + str(row[8]) + str(row[9])
-            # 如果该行的网口号，不是第一次出现：
-            if port in port_list:
-                start_value += increment
-                row[11] = start_value
-                increment = data_length[row[2]]
-            # 如果该行网口号是第一次出现：
-            else:
-                # 有必要把start_value初始化一下
-                # 因为在进入一个新网口的时候，这个值需要从0开始
-                start_value = 0
-                # 记录下increment，给下一行用
-                increment = data_length[row[2]]
-                # 记录下这个端口号
-                port_list.append(port)
-                # 一个端口的第一个数据点，offset值从0开始
-                row[11] = 0
+            # , 而且是SEND类型的点
+            if 'SEND' in row[5]:
+                # 获得数据长度
+                print(increment)
+                # 生成一个全"站"唯一的网口号：机柜号+机笼号+槽号+端口号
+                port = str(row[6]) + str(row[7]) + str(row[8]) + str(row[9])
+
+                # 如果该行的网口号，不是第一次出现：
+                if port in port_list:
+                    row[11] = start_value + increment
+                    start_value += increment
+                    increment = data_length[row[2]]
+                # 如果该行网口号是第一次出现：
+                else:
+                    # 有必要把start_value初始化一下
+                    # 因为在进入一个新网口的时候，这个值需要从0开始
+                    start_value = 0
+                    # 记录下这个端口号
+                    port_list.append(port)
+                    # 一个端口的第一个数据点，offset值从0开始
+                    row[11] = start_value
+                    increment = data_length[row[2]]
 
     return data_list
 
