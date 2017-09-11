@@ -89,7 +89,7 @@ def datalink_offset_calc(data_list):
             # 如果该行的网口号，不是第一次出现：
             if port in port_list:
                 start_value += increment
-                row[11] = start_value
+                row[11] = start_value + start_value % data_length(row[2])
                 increment = data_length[row[2]]
             # 如果该行网口号是第一次出现：
             else:
