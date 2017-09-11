@@ -73,9 +73,11 @@ def datalink_offset_calc(data_list):
 
     # 定义一个对网口的记录
     port_list = []
-    # 起始offset
+
+    # offset起始值
     start_value = 0
-    # offset增量（取决于上一行的数据类型）
+
+    # offset增量（初始化为0，但实际值取决于上一行的数据类型）
     increment = 0
 
     for row in data_list:
@@ -84,14 +86,15 @@ def datalink_offset_calc(data_list):
         if not ('环点' in row[10]):
             # 生成一个全"站"唯一的网口号：机柜号+机笼号+槽号+端口号
             port = str(row[6]) + str(row[7]) + str(row[8]) + str(row[9])
-            # 如果改行的网口号，不是第一次出现：
+            # 如果该行的网口号，不是第一次出现：
             if port in port_list:
                 start_value += increment
                 row[11] = start_value
                 increment = data_length[row[2]]
-            # 如果改行网口号是第一次出现：
+            # 如果该行网口号是第一次出现：
             else:
-                # 有必要再赋值一遍，因为在进入下一个网口的时候，这个值需要从0开始
+                # 有必要把start_value初始化一下
+                # 因为在进入一个新网口的时候，这个值需要从0开始
                 start_value = 0
                 # 记录下increment，给下一行用
                 increment = data_length[row[2]]
@@ -149,6 +152,7 @@ def csv_handler(in_file_path, out_file_path):
 
             # 先写header，增加title
             header = next(reader)
+            print(header)
             header[-1] = '偏移'
             writer.writerow(header)
 
@@ -169,8 +173,12 @@ def csv_handler(in_file_path, out_file_path):
             # 为firmnet类型数据生成offset
             list_with_offset = firmnet_offset_calc(sorted_csv_list)
 
+        else:
+            list_with_offset = []
+
         # 将生成的最终数据写入目标文件
-        writer.writerows(list_with_offset)
+        if list_with_offset:
+            writer.writerows(list_with_offset)
 
 
 def main():
@@ -191,10 +199,10 @@ def main():
         input('在offset文件夹中没有待处理的文件，按任意键退出...')
         sys.exit(1)
 
-    hasTarget = False
+    has_target = False
     for csvfile in csvfiles:
         if csvfile[:6].lower() == 'netdev' or csvfile[:8].lower() == 'download':
-            hasTarget = True
+            has_target = True
             # print('\nDEBUG')
             # print(csvfile)
             in_file_path = os.path.join(os.getcwd(), 'offset', csvfile)
@@ -203,11 +211,11 @@ def main():
             # 调用csv_handler
             csv_handler(in_file_path, out_file_path)
 
-            # 每一个文件处理万之后，hint一下用户
+            # 每一个文件处理完之后，hint一下用户
             print(os.path.basename(csvfile) + ' 处理完毕')
 
     # 如果没有名称中带有 netdev 或者 download 的文件，要hint一下
-    if hasTarget:
+    if has_target:
         input('按任意键退出...')
     else:
         input('在 offset 文件夹中没有 DEVNET 或 DOWNLOAD 类的 csv 文件。按任意键退出...')
