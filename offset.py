@@ -15,18 +15,21 @@ def sort_datalink(csv_reader):
     data_type = ['real_signal', 'int_signal', 'real', 'bool_signal', 'int', 'bool', 'device_signal']
 
     for row in csv_list:
-        # 如果说明列中的内容带有"环点"，说明是环网的点；否则为datalink的点
+        # 总原则:如果说明列中的内容带有"环点"，说明是环网的点；否则为datalink的点
+
+        # row[10]中不包含‘环点’字样
         if not ('环点' in row[10]):
             # 在数据类型清单中，查该row数据类型对应的index，增加到row的最后
             row.extend([data_type.index(row[2])])
-        # 如果说明列有内容，说明是环网点
+
+        # 如果说明列有‘环点’字样，说明是环网点
         else:
             # 将100添加到row的最后。（实际这个地方填什么值都行）
             row.extend([100])
 
-    # 经过以上的处理，csv的数据从11列变成了12列(12列就是辅助列)
+    # 经过以上的处理，csv的数据从11列(空白列)变成了12列(12列就是辅助列)
     # 根据6, 7, 8, 9, 12列的优先顺序，进行排序，并返回
-    sorted_csv_list = sorted(csv_list, key=itemgetter(6, 7, 8, 9, 12))
+    sorted_csv_list = sorted(csv_list, key=itemgetter(6, 7, 8, 9, 12, 1))
 
     # 最后把辅助列删掉
     for row in sorted_csv_list:
@@ -113,7 +116,7 @@ def datalink_offset_calc(data_list):
             # , 而且是SEND类型的点
             if 'SEND' in row[5]:
                 # 获得数据长度
-                print(increment)
+                # print(increment)
                 # 生成一个全"站"唯一的网口号：机柜号+机笼号+槽号+端口号
                 port = str(row[6]) + str(row[7]) + str(row[8]) + str(row[9])
 
@@ -194,6 +197,9 @@ def firmnet_offset_calc(data_list):
                 node_list.append(row[0])  # row[0]是node号
                 decrement = int(row[6])   # row[6]是节点第一行的原offset
                 row[6] = 0                # 将该行offset设为0
+        else:
+            # 当前行是dsr或recv类型的点，不生成offset，并且把原来的值（原来是有值的）都变成0
+            row[6] = 0
 
     return data_list
 
@@ -214,7 +220,7 @@ def csv_handler(in_file_path, out_file_path):
 
             # 先写header，增加title
             header = next(reader)
-            print(header)
+            # print(header)
             header[-1] = '偏移'
             writer.writerow(header)
 
