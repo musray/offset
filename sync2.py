@@ -4,6 +4,8 @@ import sys
 import os
 import csv
 from operator import itemgetter
+import pprint
+pp = pprint.PrettyPrinter(indent=4)
 
 # ---------------------------------------------- #
 #                 Abstraction
@@ -106,7 +108,12 @@ def query_firmnet(name, order, collection):
     # 3. 把这个row返回。（根据点表的填写规则，只能有唯一的row被返回）
     # target_row = [row for row in collection[order-1] if row[2].lower() == name.lower() and
     #               (row[1].lower() == 'send' or row[1].lower() == 'dss')]
+
+    # DEBUG
     # print('order is %s' % order)
+    # print('collection is')
+    # pp.pprint(collection)
+
     select_net = False
     for net, nodes in NET_NODE_RELATION.items():
         if order in nodes:
@@ -147,18 +154,21 @@ def get_firmnet_data(firmnet_files):
 
             # 尝试在文件名的倒数第5位获取数字，分别代表一种firmnet环网：1：SSB；2：SB_A；3：SB_B；4：HM
             try:
-                sequence = int(firmnet_file[-5])
-                if not sequence in [1, 2, 3, 4]:
+                sequence = firmnet_file[-5]
+                if not sequence in ['1', '2', '3', '4']:
                     input('%s 文件命名错误，文件名最后一位必须是1-4的数字。请检查文件名后重新运行程序。\n按任意键退出...')
 
             except ValueError:
                 input('%s 文件命名错误，确认后重新运行程序。\n按任意键退出...')
                 sys.exit(1)
+
             # sequence决定了data在firmnet_data这个三维list中的顺序
             # 从data里筛选出send和dss类型的点，写入到firmnet_data指定的sublist里
-            firmnet_data[sequence - 1] = [row for row in data if row[1].lower()=='send' or row[1].lower=='dss']
+            firmnet_data[int(sequence) - 1] = [row for row in data if row[1].lower()=='send' or row[1].lower()=='dss']
 
-    # print(firmnet_data)
+    # DEBUG
+    print('firmnet data is')
+    pp.pprint(firmnet_data)
 
     return firmnet_data
 
