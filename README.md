@@ -50,3 +50,16 @@
     - ~~查查环网中，一共有多少种数据类型(send, recv, dss?, dsr?)~~
 3. 在等待文件处理时的stdout增加动画（像是完全是没有用的feature）
 4. ~~完成`clear_folder.py`~~
+5. 如何确定netdev里的点，是netdev的点，还是datalink的点？2018-9-25
+    - 当前的策略，对于netdev1-8（待确认）的表，Col[10]（K列）写了环网，就是环网。没写环网，就是datalink。
+    - 对于9以后的表，全都是环网的点。
+6. 如何确定是哪个环网？
+    - 一共有四个环网，如何确定某个netdev中的点，是哪个环网上的？
+    - 先给环网编号，分别是上层环网1号，SA是2号，SB是3号，HM是4号。
+    - 初步：写一个死规则。比如netdev_1，都是1号环网上的点，netdev_12，都是2号环上的点。
+    [solution]，可能要弄一个netdev和firmnet之间的同步关系图
+7. 一个datalink的receive点，到底是从哪个站收到的？
+    - 比如，RPC1，可能从RPC2，3，4都接收datalink的通信点
+    - 再比如，ESF-A，可能从RPC1，2，3，4都接收通信点
+    - 那么，如何从netdev表格中，判断一个recevie的datalink点的发送者是谁？
+    [solution]可能需要弄一个netdev_*.csv各个文件之间的同步关系图
