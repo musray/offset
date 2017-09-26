@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+ï»¿#!/usr/bin/env python3
 import os
 import csv
 import sys
@@ -6,32 +6,32 @@ from operator import itemgetter
 
 
 def sort_datalink(csv_reader):
-    # csv_readerÊÇÒ»¸öcsv.readerµÄobject
+    # csv_readeræ˜¯ä¸€ä¸ªcsv.readerçš„object
 
-    # °ÑcsvµÄreader×ª»¯³ÉÒ»¸ölist
+    # æŠŠcsvçš„readerè½¬åŒ–æˆä¸€ä¸ªlist
     csv_list = list(csv_reader)
 
-    # ¸ù¾İ¼¼Êõ²¿¸øµÄÎÄµµ£¬"Êı¾İÀàĞÍ"µÄÅÅÁĞÊÇ¹Ì¶¨Ë³ĞòµÄ£¬´ÎĞòÈçÏÂ£º
+    # æ ¹æ®æŠ€æœ¯éƒ¨ç»™çš„æ–‡æ¡£ï¼Œ"æ•°æ®ç±»å‹"çš„æ’åˆ—æ˜¯å›ºå®šé¡ºåºçš„ï¼Œæ¬¡åºå¦‚ä¸‹ï¼š
     data_type = ['real_signal', 'int_signal', 'real', 'bool_signal', 'int', 'bool', 'device_signal']
 
     for row in csv_list:
-        # ×ÜÔ­Ôò:Èç¹ûËµÃ÷ÁĞÖĞµÄÄÚÈİ´øÓĞ"»·µã"£¬ËµÃ÷ÊÇ»·ÍøµÄµã£»·ñÔòÎªdatalinkµÄµã
+        # æ€»åŸåˆ™:å¦‚æœè¯´æ˜åˆ—ä¸­çš„å†…å®¹å¸¦æœ‰"ç¯ç‚¹"ï¼Œè¯´æ˜æ˜¯ç¯ç½‘çš„ç‚¹ï¼›å¦åˆ™ä¸ºdatalinkçš„ç‚¹
 
-        # row[10]ÖĞ²»°üº¬¡®»·µã¡¯×ÖÑù
-        if not ('»·µã' in row[10]):
-            # ÔÚÊı¾İÀàĞÍÇåµ¥ÖĞ£¬²é¸ÃrowÊı¾İÀàĞÍ¶ÔÓ¦µÄindex£¬Ôö¼Óµ½rowµÄ×îºó
+        # row[10]ä¸­ä¸åŒ…å«â€˜ç¯ç‚¹â€™å­—æ ·
+        if not ('ç¯ç‚¹' in row[10]):
+            # åœ¨æ•°æ®ç±»å‹æ¸…å•ä¸­ï¼ŒæŸ¥è¯¥rowæ•°æ®ç±»å‹å¯¹åº”çš„indexï¼Œå¢åŠ åˆ°rowçš„æœ€å
             row.extend([data_type.index(row[2])])
 
-        # Èç¹ûËµÃ÷ÁĞÓĞ¡®»·µã¡¯×ÖÑù£¬ËµÃ÷ÊÇ»·Íøµã
+        # å¦‚æœè¯´æ˜åˆ—æœ‰â€˜ç¯ç‚¹â€™å­—æ ·ï¼Œè¯´æ˜æ˜¯ç¯ç½‘ç‚¹
         else:
-            # ½«100Ìí¼Óµ½rowµÄ×îºó¡££¨Êµ¼ÊÕâ¸öµØ·½ÌîÊ²Ã´Öµ¶¼ĞĞ£©
+            # å°†100æ·»åŠ åˆ°rowçš„æœ€åã€‚ï¼ˆå®é™…è¿™ä¸ªåœ°æ–¹å¡«ä»€ä¹ˆå€¼éƒ½è¡Œï¼‰
             row.extend([100])
 
-    # ¾­¹ıÒÔÉÏµÄ´¦Àí£¬csvµÄÊı¾İ´Ó11ÁĞ(¿Õ°×ÁĞ)±ä³ÉÁË12ÁĞ(12ÁĞ¾ÍÊÇ¸¨ÖúÁĞ)
-    # ¸ù¾İ6, 7, 8, 9, 12ÁĞµÄÓÅÏÈË³Ğò£¬½øĞĞÅÅĞò£¬²¢·µ»Ø
+    # ç»è¿‡ä»¥ä¸Šçš„å¤„ç†ï¼Œcsvçš„æ•°æ®ä»11åˆ—(ç©ºç™½åˆ—)å˜æˆäº†12åˆ—(12åˆ—å°±æ˜¯è¾…åŠ©åˆ—)
+    # æ ¹æ®6, 7, 8, 9, 12åˆ—çš„ä¼˜å…ˆé¡ºåºï¼Œè¿›è¡Œæ’åºï¼Œå¹¶è¿”å›
     sorted_csv_list = sorted(csv_list, key=itemgetter(6, 7, 8, 9, 12, 1))
 
-    # ×îºó°Ñ¸¨ÖúÁĞÉ¾µô
+    # æœ€åæŠŠè¾…åŠ©åˆ—åˆ æ‰
     for row in sorted_csv_list:
         row.pop()
 
@@ -41,40 +41,40 @@ def sort_datalink(csv_reader):
 def sort_firmnet(csv_reader):
     csv_list = list(csv_reader)
 
-    # ÓÉÓÚfirmnetÖĞµÄÆ«ÒÆµØÖ·£¬ÓĞĞ©ÊÇint£¬ÓĞĞ©ÊÇstr£¨ÕâÊÇÒ»¸ö¿Ó£©
-    # ËùÒÔÕâÀïÏÈ°Ñoffset1ÖĞµÄÖµÈ«¶¼±ä³Éint£¬ÔÙÖ´ĞĞÅÅĞò£¬·ñÔòÅÅĞò½á¹ûÊÇÂÒµÄ
+    # ç”±äºfirmnetä¸­çš„åç§»åœ°å€ï¼Œæœ‰äº›æ˜¯intï¼Œæœ‰äº›æ˜¯strï¼ˆè¿™æ˜¯ä¸€ä¸ªå‘ï¼‰
+    # æ‰€ä»¥è¿™é‡Œå…ˆæŠŠoffset1ä¸­çš„å€¼å…¨éƒ½å˜æˆintï¼Œå†æ‰§è¡Œæ’åºï¼Œå¦åˆ™æ’åºç»“æœæ˜¯ä¹±çš„
     for row in csv_list:
         row[6] = int(row[6])
 
-    # firmnetµã±íµÄÅÅĞò¹æÔò£º
-    # 1. °´nodeÅÅĞò£¨±í¸ñµÚ0ÁĞ£©£¬±£Ö¤ÏàÍ¬½ÚµãµÄ·ÅÔÚÒ»Æğ
-    # 2. °´offset1£¨±í¸ñµÚ6ÁĞ£©ÅÅĞò£¬ÉıĞò
-    # 3. ÅÅĞòÖ®ºó£¬ÔÚÍ¬Ò»nodeÄÚ£¬sendºÍdss¾Í°´ÕÕoffsetÖµµÄÉıĞòÅÅÁĞÁË
+    # firmnetç‚¹è¡¨çš„æ’åºè§„åˆ™ï¼š
+    # 1. æŒ‰nodeæ’åºï¼ˆè¡¨æ ¼ç¬¬0åˆ—ï¼‰ï¼Œä¿è¯ç›¸åŒèŠ‚ç‚¹çš„æ”¾åœ¨ä¸€èµ·
+    # 2. æŒ‰offset1ï¼ˆè¡¨æ ¼ç¬¬6åˆ—ï¼‰æ’åºï¼Œå‡åº
+    # 3. æ’åºä¹‹åï¼Œåœ¨åŒä¸€nodeå†…ï¼Œsendå’Œdsså°±æŒ‰ç…§offsetå€¼çš„å‡åºæ’åˆ—äº†
     sorted_csv_list = sorted(csv_list, key=itemgetter(0, 6))
     return sorted_csv_list
 
 def datalink_offset_gen(start, increment, data_lenght):
     '''
-    :param start:  ÉÏÒ»¸öÍ¨ĞÅµãµÄÆ«ÒÆµØÖ·
-    :param increment: ÉÏÒ»¸öÍ¨ĞÅµãµÄÊı¾İÀàĞÍ³¤¶È
-    :param type: ±¾Í¨ĞÅµãµÄÊı¾İÀàĞÍÓë±»ËÄÕû³ıµÄ¹ØÏµ
-    :return: int, ±¾Í¨ĞÅµãµÄÆ«ÒÆµØÖ·
+    :param start:  ä¸Šä¸€ä¸ªé€šä¿¡ç‚¹çš„åç§»åœ°å€
+    :param increment: ä¸Šä¸€ä¸ªé€šä¿¡ç‚¹çš„æ•°æ®ç±»å‹é•¿åº¦
+    :param type: æœ¬é€šä¿¡ç‚¹çš„æ•°æ®ç±»å‹ä¸è¢«å››æ•´é™¤çš„å…³ç³»
+    :return: int, æœ¬é€šä¿¡ç‚¹çš„åç§»åœ°å€
     '''
 
     #
-    # Èç¹ûµã¶ÔµãµÄoffset£¬ÓĞ±»nÕû³ıµÄĞèÇó
-    # Ö±½Ó°ÑÏÂÃæµÄ´úÂëuncommnet
+    # å¦‚æœç‚¹å¯¹ç‚¹çš„offsetï¼Œæœ‰è¢«næ•´é™¤çš„éœ€æ±‚
+    # ç›´æ¥æŠŠä¸‹é¢çš„ä»£ç uncommnet
     #
-    # ÏÈ²»¿¼ÂÇ±»4Õû³ıµÄÎÊÌâ£¬Ëã³öÒ»¸ö»ù´¡µÄÆ«ÒÆµØÖ·
+    # å…ˆä¸è€ƒè™‘è¢«4æ•´é™¤çš„é—®é¢˜ï¼Œç®—å‡ºä¸€ä¸ªåŸºç¡€çš„åç§»åœ°å€
     # base_value = start + increment
-    # Èç¹ûbase_value´óÓÚµ±Ç°Í¨ĞÅµãµÄÊı¾İÀàĞÍ³¤¶È
+    # å¦‚æœbase_valueå¤§äºå½“å‰é€šä¿¡ç‚¹çš„æ•°æ®ç±»å‹é•¿åº¦
     # if base_value > data_lenght:
-        # Èç¹ûbase_value²»ÄÜ±»typeÕû³ı
+        # å¦‚æœbase_valueä¸èƒ½è¢«typeæ•´é™¤
         # while base_value % data_lenght != 0:
         #     base_value += 1
-    # Èç¹ûbase_valueĞ¡ÓÚtype
+    # å¦‚æœbase_valueå°äºtype
     # elif base_value <= data_lenght:
-        # base_value¼Ó1£¬Ö±µ½ÆäµÈÓÚtypeÎªÖ¹
+        # base_valueåŠ 1ï¼Œç›´åˆ°å…¶ç­‰äºtypeä¸ºæ­¢
         # while base_value != data_lenght:
         #     base_value += 1
 
@@ -82,14 +82,14 @@ def datalink_offset_gen(start, increment, data_lenght):
 
 
 def datalink_offset_calc(data_list):
-    # offset¼ÆËã¹æÔò
-    # 1. csv_listÒÑ¾­ÊÇ°´ÒªÇóÅÅĞò¹ıÁËµÄ
-    # 2. ÒÔ"Íø¿Ú"Îªµ¥Î»£¬ÄÚ½øĞĞoffset¼ÆËã
-    # 4. Ã¿¸öÍø¿ÚµÄµÚÒ»¸öĞÅºÅ£¬ÆğÊ¼µØÖ·¶¼ÊÇ0
-    # 5. µÚn+1¸öĞÅºÅ£¬ÆäoffsetÊÇoffset(n) + DATA_LENGTH
-    # 6. DATA_LENGTH³¤¶ÈÊÇ¹Ì¶¨µÄ£¬¼ûÏÂÃæµÄ¾ßÌå¶¨Òå
+    # offsetè®¡ç®—è§„åˆ™
+    # 1. csv_listå·²ç»æ˜¯æŒ‰è¦æ±‚æ’åºè¿‡äº†çš„
+    # 2. ä»¥"ç½‘å£"ä¸ºå•ä½ï¼Œå†…è¿›è¡Œoffsetè®¡ç®—
+    # 4. æ¯ä¸ªç½‘å£çš„ç¬¬ä¸€ä¸ªä¿¡å·ï¼Œèµ·å§‹åœ°å€éƒ½æ˜¯0
+    # 5. ç¬¬n+1ä¸ªä¿¡å·ï¼Œå…¶offsetæ˜¯offset(n) + DATA_LENGTH
+    # 6. DATA_LENGTHé•¿åº¦æ˜¯å›ºå®šçš„ï¼Œè§ä¸‹é¢çš„å…·ä½“å®šä¹‰
 
-    # ¶¨ÒåÊı¾İÀàĞÍµÄ³¤¶È
+    # å®šä¹‰æ•°æ®ç±»å‹çš„é•¿åº¦
     data_length = {
         'real_signal': [8, 4],
         'real': [4, 4],
@@ -101,40 +101,40 @@ def datalink_offset_calc(data_list):
     }
 
 
-    # ¶¨ÒåÒ»¸ö¶ÔÍø¿ÚµÄ¼ÇÂ¼
+    # å®šä¹‰ä¸€ä¸ªå¯¹ç½‘å£çš„è®°å½•
     port_list = []
 
-    # offsetÆğÊ¼Öµ
+    # offsetèµ·å§‹å€¼
     start_value = 0
 
-    # offsetÔöÁ¿£¨³õÊ¼»¯Îª0£¬µ«Êµ¼ÊÖµÈ¡¾öÓÚÉÏÒ»ĞĞµÄÊı¾İÀàĞÍ£©
+    # offsetå¢é‡ï¼ˆåˆå§‹åŒ–ä¸º0ï¼Œä½†å®é™…å€¼å–å†³äºä¸Šä¸€è¡Œçš„æ•°æ®ç±»å‹ï¼‰
     increment = 0
 
     for row in data_list:
-        # Èç¹û¸ÃĞĞÊÇdatalink
-        if not ('»·µã' in row[10]):
-            # , ¶øÇÒÊÇSENDÀàĞÍµÄµã
+        # å¦‚æœè¯¥è¡Œæ˜¯datalink
+        if not ('ç¯ç‚¹' in row[10]):
+            # , è€Œä¸”æ˜¯SENDç±»å‹çš„ç‚¹
             if 'SEND' in row[5]:
-                # »ñµÃÊı¾İ³¤¶È
+                # è·å¾—æ•°æ®é•¿åº¦
                 # print(increment)
-                # Éú³ÉÒ»¸öÈ«"Õ¾"Î¨Ò»µÄÍø¿ÚºÅ£º»ú¹ñºÅ+»úÁıºÅ+²ÛºÅ+¶Ë¿ÚºÅ
+                # ç”Ÿæˆä¸€ä¸ªå…¨"ç«™"å”¯ä¸€çš„ç½‘å£å·ï¼šæœºæŸœå·+æœºç¬¼å·+æ§½å·+ç«¯å£å·
                 port = str(row[6]) + str(row[7]) + str(row[8]) + str(row[9])
 
-                # Èç¹û¸ÃĞĞµÄÍø¿ÚºÅ£¬²»ÊÇµÚÒ»´Î³öÏÖ£º
+                # å¦‚æœè¯¥è¡Œçš„ç½‘å£å·ï¼Œä¸æ˜¯ç¬¬ä¸€æ¬¡å‡ºç°ï¼š
                 if port in port_list:
                     row[11] = datalink_offset_gen(start_value, increment, data_length[row[2]][1])
-                    # µ±Ç°µãµÄoffset£¬±£´æÎªstart_value£¬ÏÂÒ»ÂÖÊ¹ÓÃ
+                    # å½“å‰ç‚¹çš„offsetï¼Œä¿å­˜ä¸ºstart_valueï¼Œä¸‹ä¸€è½®ä½¿ç”¨
                     start_value = row[11]
-                    # ¸ÃĞĞÍ¨ĞÅµãµÄÊı¾İ³¤¶È£¬×÷ÎªÏÂÒ»ÂÖµÄincrement
+                    # è¯¥è¡Œé€šä¿¡ç‚¹çš„æ•°æ®é•¿åº¦ï¼Œä½œä¸ºä¸‹ä¸€è½®çš„increment
                     increment = data_length[row[2]][0]
-                # Èç¹û¸ÃĞĞÍø¿ÚºÅÊÇµÚÒ»´Î³öÏÖ£º
+                # å¦‚æœè¯¥è¡Œç½‘å£å·æ˜¯ç¬¬ä¸€æ¬¡å‡ºç°ï¼š
                 else:
-                    # ÓĞ±ØÒª°Ñstart_value³õÊ¼»¯Ò»ÏÂ
-                    # ÒòÎªÔÚ½øÈëÒ»¸öĞÂÍø¿ÚµÄÊ±ºò£¬Õâ¸öÖµĞèÒª´Ó0¿ªÊ¼
+                    # æœ‰å¿…è¦æŠŠstart_valueåˆå§‹åŒ–ä¸€ä¸‹
+                    # å› ä¸ºåœ¨è¿›å…¥ä¸€ä¸ªæ–°ç½‘å£çš„æ—¶å€™ï¼Œè¿™ä¸ªå€¼éœ€è¦ä»0å¼€å§‹
                     start_value = 0
-                    # ¼ÇÂ¼ÏÂÕâ¸ö¶Ë¿ÚºÅ
+                    # è®°å½•ä¸‹è¿™ä¸ªç«¯å£å·
                     port_list.append(port)
-                    # Ò»¸ö¶Ë¿ÚµÄµÚÒ»¸öÊı¾İµã£¬offsetÖµ´Ó0¿ªÊ¼
+                    # ä¸€ä¸ªç«¯å£çš„ç¬¬ä¸€ä¸ªæ•°æ®ç‚¹ï¼Œoffsetå€¼ä»0å¼€å§‹
                     row[11] = start_value
                     increment = data_length[row[2]][0]
 
@@ -148,14 +148,14 @@ def offset_gen(base_value, data_lenght):
     :return: 
     '''
 
-    # Èç¹ûbase_value´óÓÚµ±Ç°Í¨ĞÅµãµÄÊı¾İÀàĞÍ³¤¶È
+    # å¦‚æœbase_valueå¤§äºå½“å‰é€šä¿¡ç‚¹çš„æ•°æ®ç±»å‹é•¿åº¦
     if base_value > data_lenght:
-        # Èç¹ûbase_value²»ÄÜ±»data_lengthÕû³ı
+        # å¦‚æœbase_valueä¸èƒ½è¢«data_lengthæ•´é™¤
         while base_value % data_lenght != 0:
             base_value += 1
-    # Èç¹ûbase_valueĞ¡ÓÚtype
+    # å¦‚æœbase_valueå°äºtype
     elif base_value <= data_lenght:
-        # base_value¼Ó1£¬Ö±µ½ÆäµÈÓÚtypeÎªÖ¹
+        # base_valueåŠ 1ï¼Œç›´åˆ°å…¶ç­‰äºtypeä¸ºæ­¢
         while base_value != data_lenght:
             base_value += 1
 
@@ -163,11 +163,11 @@ def offset_gen(base_value, data_lenght):
 
 def firmnet_offset_calc(data_list):
 
-    # firmnet offsetµÄ¼ÆËã¹æÔò
-    # 1. Èç¹ûrow[1]²»ÊÇsend»òdssÀàĞÍ£¬¸ÃĞĞ²»×ö´¦Àí
-    # 2. Èç¹ûrow[1]ÊÇsend»òdssÀàĞÍ£¬Ôò£º
-    #    - Èç¹ûÕ¾ºÅ(node)ÊÇµÚÒ»´ÎÓöµ½£¬Ôò: ¼ÇÂ¼row[6]µÄÖµ£¬×÷Îªdecrement_value; row[6] = 0
-    #    - Èç¹ûÕ¾ºÅ(node)²»ÊÇµÚÒ»´ÎÓöµ½£¬Ôò£ºrow[6] -= decrement_value
+    # firmnet offsetçš„è®¡ç®—è§„åˆ™
+    # 1. å¦‚æœrow[1]ä¸æ˜¯sendæˆ–dssç±»å‹ï¼Œè¯¥è¡Œä¸åšå¤„ç†
+    # 2. å¦‚æœrow[1]æ˜¯sendæˆ–dssç±»å‹ï¼Œåˆ™ï¼š
+    #    - å¦‚æœç«™å·(node)æ˜¯ç¬¬ä¸€æ¬¡é‡åˆ°ï¼Œåˆ™: è®°å½•row[6]çš„å€¼ï¼Œä½œä¸ºdecrement_value; row[6] = 0
+    #    - å¦‚æœç«™å·(node)ä¸æ˜¯ç¬¬ä¸€æ¬¡é‡åˆ°ï¼Œåˆ™ï¼šrow[6] -= decrement_value
 
     data_length = {
         'real_signal': [8, 4],
@@ -178,27 +178,27 @@ def firmnet_offset_calc(data_list):
         'bool': [1, 1],
         'device_signal': [4, 4]
     }
-    # ĞÂ½¨Ò»¸öÕ¾ºÅnodeÁĞ±í
+    # æ–°å»ºä¸€ä¸ªç«™å·nodeåˆ—è¡¨
     node_list = []
 
-    # Éú³ÉÒ»¸öÓÃÓÚĞŞÕıÆ«ÒÆµØÖ·µÄµİ¼õÖµ
-    # ÔÚÕıÊ½µÄÊı¾İ´¦ÀíÖĞ£¬Ã¿Ò»¸önodeµÄÏÖÓĞ×îĞ¡Æ«ÒÆµØÖ·£¬»á¸³¸ødecrement
+    # ç”Ÿæˆä¸€ä¸ªç”¨äºä¿®æ­£åç§»åœ°å€çš„é€’å‡å€¼
+    # åœ¨æ­£å¼çš„æ•°æ®å¤„ç†ä¸­ï¼Œæ¯ä¸€ä¸ªnodeçš„ç°æœ‰æœ€å°åç§»åœ°å€ï¼Œä¼šèµ‹ç»™decrement
     decrement = 0
 
     for row in data_list:
-        # Èç¹û direction ÁĞµÄÄÚÈİÊÇ send »ò dss£¨dssÊÇdevice signalµÄsendĞÅºÅ£©
+        # å¦‚æœ direction åˆ—çš„å†…å®¹æ˜¯ send æˆ– dssï¼ˆdssæ˜¯device signalçš„sendä¿¡å·ï¼‰
         if row[1].lower() == 'send' or row[1].lower() == 'dss':
-            # ¸Ã½ÚµãµÄµÚ2ĞĞÖÁ×îºóÒ»ĞĞ
+            # è¯¥èŠ‚ç‚¹çš„ç¬¬2è¡Œè‡³æœ€åä¸€è¡Œ
             if row[0] in node_list:
                 base_value = int(row[6]) - decrement
                 row[6] = offset_gen(base_value, data_length[row[3]][1])
-            # ¸Ã½ÚµãµÄµÚ1ĞĞ
+            # è¯¥èŠ‚ç‚¹çš„ç¬¬1è¡Œ
             else:
-                node_list.append(row[0])  # row[0]ÊÇnodeºÅ
-                decrement = int(row[6])   # row[6]ÊÇ½ÚµãµÚÒ»ĞĞµÄÔ­offset
-                row[6] = 0                # ½«¸ÃĞĞoffsetÉèÎª0
+                node_list.append(row[0])  # row[0]æ˜¯nodeå·
+                decrement = int(row[6])   # row[6]æ˜¯èŠ‚ç‚¹ç¬¬ä¸€è¡Œçš„åŸoffset
+                row[6] = 0                # å°†è¯¥è¡Œoffsetè®¾ä¸º0
         else:
-            # µ±Ç°ĞĞÊÇdsr»òrecvÀàĞÍµÄµã£¬²»Éú³Éoffset£¬²¢ÇÒ°ÑÔ­À´µÄÖµ£¨Ô­À´ÊÇÓĞÖµµÄ£©¶¼±ä³É0
+            # å½“å‰è¡Œæ˜¯dsræˆ–recvç±»å‹çš„ç‚¹ï¼Œä¸ç”Ÿæˆoffsetï¼Œå¹¶ä¸”æŠŠåŸæ¥çš„å€¼ï¼ˆåŸæ¥æ˜¯æœ‰å€¼çš„ï¼‰éƒ½å˜æˆ0
             row[6] = 0
 
     return data_list
@@ -216,56 +216,56 @@ def csv_handler(in_file_path, out_file_path):
         reader = csv.reader(csv_in, delimiter=',')
         writer = csv.writer(csv_out, delimiter=',')
 
-        # Èç¹ûÎÄ¼şÊÇdatalinkÇåµ¥
+        # å¦‚æœæ–‡ä»¶æ˜¯datalinkæ¸…å•
         if 'netdev' in in_file_path.lower():
 
-            # ÏÈĞ´header£¬Ôö¼Ótitle
+            # å…ˆå†™headerï¼Œå¢åŠ title
             header = next(reader)
             # print(header)
-            header[-1] = 'Æ«ÒÆ'
+            header[-1] = 'åç§»'
             writer.writerow(header)
 
-            # Éú³ÉÒ»¸öÅÅĞòºóµÄcsvÊı¾İlist
+            # ç”Ÿæˆä¸€ä¸ªæ’åºåçš„csvæ•°æ®list
             sorted_csv_list = sort_datalink(reader)
-            # ÎªdatalinkÀàĞÍÊı¾İÉú³Éoffset
+            # ä¸ºdatalinkç±»å‹æ•°æ®ç”Ÿæˆoffset
             list_with_offset = datalink_offset_calc(sorted_csv_list)
 
-        # Èç¹ûÎÄ¼şÊÇfirmnetÇåµ¥
+        # å¦‚æœæ–‡ä»¶æ˜¯firmnetæ¸…å•
         elif 'download' in in_file_path.lower():
 
-            # header²»ĞèÒª´¦Àí£¬Ö±½ÓĞ´µ½writerÀïÈ¥
+            # headerä¸éœ€è¦å¤„ç†ï¼Œç›´æ¥å†™åˆ°writeré‡Œå»
             header = next(reader)
             writer.writerow(header)
 
-            # ¸ù¾İFirmnetµÄÅÅĞòÒªÇó£¬¶ÔÊı¾İ½øĞĞÅÅĞò
+            # æ ¹æ®Firmnetçš„æ’åºè¦æ±‚ï¼Œå¯¹æ•°æ®è¿›è¡Œæ’åº
             sorted_csv_list = sort_firmnet(reader)
-            # ÎªfirmnetÀàĞÍÊı¾İÉú³Éoffset
+            # ä¸ºfirmnetç±»å‹æ•°æ®ç”Ÿæˆoffset
             list_with_offset = firmnet_offset_calc(sorted_csv_list)
 
         else:
             list_with_offset = []
 
-        # ½«Éú³ÉµÄ×îÖÕÊı¾İĞ´ÈëÄ¿±êÎÄ¼ş
+        # å°†ç”Ÿæˆçš„æœ€ç»ˆæ•°æ®å†™å…¥ç›®æ ‡æ–‡ä»¶
         if list_with_offset:
             writer.writerows(list_with_offset)
 
 
 def main():
-    # Èç¹ûµ±Ç°ÎÄ¼ş¼ĞÄÚ²»´æÔÚoffsetÎÄ¼ş¼Ğ
-    # ÔòĞÂ½¨ÎÄ¼ş¼Ğ
+    # å¦‚æœå½“å‰æ–‡ä»¶å¤¹å†…ä¸å­˜åœ¨offsetæ–‡ä»¶å¤¹
+    # åˆ™æ–°å»ºæ–‡ä»¶å¤¹
     if not os.path.isdir('offset'):
-        input('Ã»ÓĞ·¢ÏÖ offset ÎÄ¼ş¼Ğ£¬ÒÑÎªÄãĞÂ½¨¡£\nÇë½«csvÎÄ¼ş·ÅÈëÆäÖĞ£¬ÔÙÔËĞĞ±¾³ÌĞò¡£\n°´ÈÎÒâ¼üÍË³ö...')
+        input('æ²¡æœ‰å‘ç° offset æ–‡ä»¶å¤¹ï¼Œå·²ä¸ºä½ æ–°å»ºã€‚\nè¯·å°†csvæ–‡ä»¶æ”¾å…¥å…¶ä¸­ï¼Œå†è¿è¡Œæœ¬ç¨‹åºã€‚\næŒ‰ä»»æ„é”®é€€å‡º...')
         os.mkdir('offset')
         sys.exit(1)
 
-    # ±éÀú¸ø¶¨ÎÄ¼ş¼ĞÄÚµÄËùÓĞÎÄ¼ş
-    # Èç¹ûÊÇcsvÎÄ¼ş£¬Ôò£º
-    #   - °¤¸ö´¦Àí
+    # éå†ç»™å®šæ–‡ä»¶å¤¹å†…çš„æ‰€æœ‰æ–‡ä»¶
+    # å¦‚æœæ˜¯csvæ–‡ä»¶ï¼Œåˆ™ï¼š
+    #   - æŒ¨ä¸ªå¤„ç†
     csvfiles = [item for item in os.listdir('./offset') if '.csv' == item[-4:].lower()]
 
-    # ÔÚoffsetÎÄ¼ş¼ĞÖĞÃ»ÓĞcsvÎÄ¼ş
+    # åœ¨offsetæ–‡ä»¶å¤¹ä¸­æ²¡æœ‰csvæ–‡ä»¶
     if len(csvfiles) == 0:
-        input('ÔÚoffsetÎÄ¼ş¼ĞÖĞÃ»ÓĞ´ı´¦ÀíµÄÎÄ¼ş£¬°´ÈÎÒâ¼üÍË³ö...')
+        input('åœ¨offsetæ–‡ä»¶å¤¹ä¸­æ²¡æœ‰å¾…å¤„ç†çš„æ–‡ä»¶ï¼ŒæŒ‰ä»»æ„é”®é€€å‡º...')
         sys.exit(1)
 
     has_target = False
@@ -277,17 +277,17 @@ def main():
             in_file_path = os.path.join(os.getcwd(), 'offset', csvfile)
             out_file_path = os.path.join(os.getcwd(), 'offset', 'offset_' + csvfile)
 
-            # µ÷ÓÃcsv_handler
+            # è°ƒç”¨csv_handler
             csv_handler(in_file_path, out_file_path)
 
-            # Ã¿Ò»¸öÎÄ¼ş´¦ÀíÍêÖ®ºó£¬hintÒ»ÏÂÓÃ»§
-            print(os.path.basename(csvfile) + ' ´¦ÀíÍê±Ï')
+            # æ¯ä¸€ä¸ªæ–‡ä»¶å¤„ç†å®Œä¹‹åï¼Œhintä¸€ä¸‹ç”¨æˆ·
+            print(os.path.basename(csvfile) + ' å¤„ç†å®Œæ¯•')
 
-    # Èç¹ûÃ»ÓĞÃû³ÆÖĞ´øÓĞ netdev »òÕß download µÄÎÄ¼ş£¬ÒªhintÒ»ÏÂ
+    # å¦‚æœæ²¡æœ‰åç§°ä¸­å¸¦æœ‰ netdev æˆ–è€… download çš„æ–‡ä»¶ï¼Œè¦hintä¸€ä¸‹
     if has_target:
-        input('°´ÈÎÒâ¼üÍË³ö...')
+        input('æŒ‰ä»»æ„é”®é€€å‡º...')
     else:
-        input('ÔÚ offset ÎÄ¼ş¼ĞÖĞÃ»ÓĞ DEVNET »ò DOWNLOAD ÀàµÄ csv ÎÄ¼ş¡£°´ÈÎÒâ¼üÍË³ö...')
+        input('åœ¨ offset æ–‡ä»¶å¤¹ä¸­æ²¡æœ‰ DEVNET æˆ– DOWNLOAD ç±»çš„ csv æ–‡ä»¶ã€‚æŒ‰ä»»æ„é”®é€€å‡º...')
 
 if __name__ == '__main__':
     main()
