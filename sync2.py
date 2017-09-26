@@ -17,6 +17,30 @@ from operator import itemgetter
 #   - 生成sync_netdev.csv，包含所有send，receive的offset
 # ---------------------------------------------- #
 
+# TODO 确定哪些netdev.csv中包含datalink
+# TODO 1. 确定那些清单中有firmnet和datalink，哪些只有firmnent
+FIRMNET_SEQ = [str(x) for x in range(13, 60)] # 返回13到59的一个list
+DATALINK_SEQ = [str(x) for x in range(1, 13)] # 返回1 到12的一个list
+NET_NODE_RELATION = {
+    '0': [str(x) for x in range(1, 9)], # RPC1,2,3,4, 在0号环网SSB
+    '1': ['12', '13', '14'],     # TODO 哪些站，在1号环网上
+    '2': ['15', '16', '17'],     # TODO 哪些站，在2号环网上
+    '3': ['18']                             # TODO 哪些站，在3号环网上
+}
+
+
+def ttest_get_firmnet_data(data):
+    print('+-----------------+')
+    print('测试内容：')
+    source = '24852'
+    target = data[0][8945][6]
+    print('\t希望值是 %s，实际得到 %s' % (source, target))
+    print('测试结果：')
+    if target == source:
+        print('\t测试通过！')
+    else:
+        print('\t测试失败')
+    print('+-----------------+')
 
 
 def file_validation(csv_list):
@@ -65,63 +89,52 @@ def file_validation(csv_list):
     return netdev_list, firmnet_list
 
 
-def get_offset_value(name, ring, data):
-    # 此函数只在sync_offset中被调用，其中：
-    #   - name: string，信号名
-    #   - ring: int, 环网号，1，2，3，4
-    #   - data: 三维数组，环网数据
+def query_firmnet(name, order, collection):
+    '''
+    :param name: string, 信号名 
+    :param order: string, 站号
+    :param collection: 三维数组，环网数据
+    :return offset_value: string, offset值
+    '''
 
-    #
-    # DEBUG
-    #
-    # print(name, ring)
-
-    warning_info = ['Safety System BUS(offset_download_1.csv)', 'Safety BUS Train A(offset_download_2.csv)', \
-                    'Safety BUS Train B(offset_download_3.csv)', 'HM Data BUS(offset_download_4.csv)']
+    # warning_info = ['Safety System BUS(offset_download_1.csv)', 'Safety BUS Train A(offset_download_2.csv)', \
+    #                 'Safety BUS Train B(offset_download_3.csv)', 'HM Data BUS(offset_download_4.csv)']
 
     # 下面这个list comprehension的意图：找到 name 所在的行
     # 1. 遍历data中第ring-1个元素所对应的二维数组，找到 name 所在的环网的数据
     # 2. 如果row[2]点名 == name，并且row[1]的内容为send或者dss，
     # 3. 把这个row返回。（根据点表的填写规则，只能有唯一的row被返回）
-    target_row = [row for row in data[ring-1] if row[2].lower() == name.lower() and
-                  (row[1].lower() == 'send' or row[1].lower() == 'dss')]
+    # target_row = [row for row in collection[order-1] if row[2].lower() == name.lower() and
+    #               (row[1].lower() == 'send' or row[1].lower() == 'dss')]
+    # print('order is %s' % order)
+    select_net = False
+    for net, nodes in NET_NODE_RELATION.items():
+        if order in nodes:
+            select_net = net
 
-    # 做一个校验，如果返回的target_row为空，说明相应的环网csv文件不在 sync 文件夹里（产生这种情况的最可能原因）
-    if not target_row:
-        input('错误。请检查 sync 中是否包含 %s 的相应文件。\n按任意键退出...' % warning_info[ring - 1])
-        sys.exit(1)
+    # if not right_net:
+    #     pass # TODO 此处需要处理异常：netdev_n中的n有问题
 
-    # 把offset值强制成int返回
-    return int(target_row[0][6].strip())
+    print('select net is %s' % select_net)
+    offset_value = False
+    for row in collection[int(select_net)]:
+        if name.lower() == row[2].lower():
+            offset_value = row[6] # offset_download的第6列
 
+    # if not offset_value:
+    #     pass # TODO 此处需要处理异常：collection中没有找到name
 
-def sync_offset(netdev_file, firmnet_data):
-    path, basename = os.path.split(netdev_file)
-    new_file = os.path.join(path, 'sync_' + basename)
-    with open(netdev_file, 'r', encoding='gbk') as in_file, \
-         open(new_file, 'w', encoding='gbk', newline='') as out_file:
+    return offset_value
 
-        # 把csv的内容读出来
-        netdev_list = list(csv.reader(in_file))
-
-        # 把需要新建的文件，用csv writer打开
-        writer = csv.writer(out_file)
-
-        # 遍历所有行，如果：
-        # 1. row[10]中有"环点"字样，则说明该行是环网的点，看倒数第二位的环号，赋值给变量（校验环网的csv是不是在sync文件夹中）
-        # 2. row[5]中的设备类型如果是send，则：用row[1]的点名去firmnet_data里找相应的点，偏移地址写到netdev_list的row[11]中
-        for row in netdev_list:
-            # 是环网上的点？
-            if '环点' in row[10]:
-                net_ring = int(row[10].strip()[-2])
-                signal_name = row[1]
-                # 调用get_offset_value
-                offset_value = get_offset_value(signal_name, net_ring, firmnet_data)  # 返回值是int
-                row[11] = offset_value
-
-        # 把需要新建的文件，用csv writer打开
-        writer = csv.writer(out_file)
-        writer.writerows(netdev_list)
+def query_datalink(name, order, collection):
+    '''
+    :param name: string, 信号名 
+    :param order: string, 站号
+    :param collection: 三维数组，环网数据
+    :return offset_value: string, offset值
+    '''
+    offset_value = False
+    return offset_value
 
 
 def get_firmnet_data(firmnet_files):
@@ -145,41 +158,97 @@ def get_firmnet_data(firmnet_files):
             # 从data里筛选出send和dss类型的点，写入到firmnet_data指定的sublist里
             firmnet_data[sequence - 1] = [row for row in data if row[1].lower()=='send' or row[1].lower=='dss']
 
-    print(firmnet_data)
+    # print(firmnet_data)
 
     return firmnet_data
+
 
 def get_datalink_data(netdev_files):
     # 把固定几个netdev文件（RPC，ESF和DTC的几个文件）挨个打开，
     # 把所有的send点，存到一个大list中
-    target_sequence = ['1', '2', '3', '4', '5']
+    # 新建一个list，用来保存所有netdev文件里datalink的内容
     datalink_data = []
     for netdev_file in netdev_files:
+        # 用文件名的倒数第5位的数字，判断netdev中是否包含datalink
         sequence = netdev_file[-5]
-        if sequence in target_sequence:
+        if sequence in DATALINK_SEQ:
             # print('sequence is %s' % sequence)
             with open(netdev_file, 'r', encoding='gbk') as n_f:
                 data = list(csv.reader(n_f))
                 # print(data)
                 datalink_data.extend([row for row in data if row[5].lower()=='send' and '环' not in row[10]])
 
-        print(len(datalink_data))
-        # print(datalink_data)
+    print(len(datalink_data))
+    # print(datalink_data)
+    return datalink_data
 
 
+def sync_offset(netdev_file, firmnet_data, datalink_data):
+    path, basename = os.path.split(netdev_file)
+    new_file = os.path.join(path, 'sync_' + basename)
+    with open(netdev_file, 'r', encoding='gbk') as in_file, \
+            open(new_file, 'w', encoding='gbk', newline='') as out_file:
 
-def ttest_get_firmnet_data(data):
-    print('+-----------------+')
-    print('测试内容：')
-    source = '24852'
-    target = data[0][8945][6]
-    print('\t希望值是 %s，实际得到 %s' % (source, target))
-    print('测试结果：')
-    if target == source:
-        print('\t测试通过！')
-    else:
-        print('\t测试失败')
-    print('+-----------------+')
+        # 把csv的内容读出来
+        netdev_list = list(csv.reader(in_file))
+
+        # 把需要新建的文件，用csv writer打开
+        writer = csv.writer(out_file)
+
+        # 遍历所有行，并进行一系列判断：
+        # 1. netdev_n.csv中，n是12及大于12的值，则这个文件中都是环网的点。
+        # 2. netdev_n.csv中，n是1-11之间的值，则这个文件中有环网的点，也有datalink的点
+        #
+        # TODO 2. 确定只有firmnent的清单中，序号和环网号的对应关系
+        # case1 如果都是firmnet的点：
+        #   - 遍历所有点，找receive的点
+        #   - 判断它是哪个环上的点
+        #   - 调用firmnet_data中对应环的数据
+        #   - 查到这个点名对应的行，返回offset值
+        #   - 填回list中
+        #
+        # case2 如果是firmnet和datalink都有：
+        #   - 遍历所有点，找receive的点
+        #   - 如果row[10]有'环点'字样，则去firmnent_data里找这个点，并获取offset值
+        #   - 如果row[10]中没有'环点'字样，则去datalink里找这个点，并获取offset值
+        #   - 填回list中
+        #
+        # 1. row[10]中有"环点"字样，则说明该行是环网的点，看倒数第二位的环号，赋值给变量（校验环网的csv是不是在sync文件夹中）
+        # 2. row[5]中的设备类型如果是send，则：用row[1]的点名去firmnet_data里找相应的点，偏移地址写到netdev_list的row[11]中
+
+        # 提取netdev_n.csv中的n，作为order
+        order = basename[-5]
+        # 如果文件中只有环网的点：
+        if order in FIRMNET_SEQ:
+            for row in netdev_list:
+                # if row[5].lower() == 'recv':
+                # 正式获得offset的值
+                # offset_value可能的值是False或者一个'0'， '1'， '2'。。。的字符串
+                offset_value = query_firmnet(row[1], order, firmnet_data)
+
+                if offset_value:
+                    row[11] = offset_value
+            # 把相关内容写入到csv.writer中去
+            writer.writerows(netdev_list)
+
+        elif order in DATALINK_SEQ:
+            for row in netdev_list:
+                # 如果该行是个环点
+                if '环点' in row[10]:
+                    offset_value = query_firmnet(row[1], order, firmnet_data)
+                    # print('name is %s' % row[1])
+                    # print('offset value is %s' % offset_value)
+                # 如果该行是个datalink点，且它是一个recv或者dsr类型，则处理它
+                elif '环点' not in row[10] and row[5].lower() in ['recv', 'dsr']:
+                    offset_value = query_datalink(row[1], order , datalink_data)
+                    if offset_value:
+                        row[11] = offset_value
+            # 把相关内容写入到csv.writer中去
+            writer.writerows(netdev_list)
+
+        else:
+            # TODO 此处需要处理文件名称不符合规范的异常
+            pass
 
 
 def main():
@@ -215,19 +284,22 @@ def main():
     # 生成一个存有firmnet.csv数据的三维数组
     # 数组中从0到3分别为Safety System BUS, Safety BUS TrainA, Safety_BUS TrainB 和 HM Data BUS
     #
-    # firmnet_data = get_firmnet_data(firmnet_files)
+    firmnet_data = get_firmnet_data(firmnet_files)
     datalink_data = get_datalink_data(netdev_files)
 
     #
     # 第4步
-    # 在netdev.csv中，逐个填写
-    # 找到其中环网的点，从firmnet_data中找到其对应的点名，拷贝offset值并粘贴
+    # 逐个打开netdev.csv，保存成一个新的list
+    # 找到其中receive的点，判断其所属的网络：
+    #   - 如果是datalink的点：从datalink_data中查找其offset值
+    #   - 如果是firmnet的点，从firmnet_data中查找其offset的值
     #
-    # for netdev_file in netdev_files:
-    #     # 先cue一下焦急等待的群众：
-    #     print('%s 处理中，请稍候...' % netdev_file)
-    #     sync_offset(netdev_file, firmnet_data)
-    #     print('已完成！')
+    #
+    for netdev_file in netdev_files:
+        # 先cue一下焦急等待的群众：
+        print('%s 处理中，请稍候...' % netdev_file)
+        sync_offset(netdev_file, firmnet_data, datalink_data)
+        print('已完成！')
 
     # Test and DEBUG
     # ttest_get_firmnet_data(firmnet_data)
