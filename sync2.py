@@ -3,7 +3,8 @@
 import sys
 import os
 import csv
-from operator import itemgetter
+import re
+# from operator import itemgetter
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -30,10 +31,10 @@ DATALINK_FIRMNET_SEQ = ['1', '2', '3', '4', '5', '6', '7', '8', '11', '12', '17'
 FIRMNET_SEQ = [str(x) for x in range(1, 64) if str(x) not in DATALINK_FIRMNET_SEQ]
 
 NET_NODE_RELATION = {
-    '0': [str(x) for x in range(1, 9)], # RPC1,2,3,4, 在0号环网SSB
-    '1': ['12', '13', '14'],     # TODO 哪些站，在1号环网上
-    '2': ['15', '16', '17'],     # TODO 哪些站，在2号环网上
-    '3': ['18']                             # TODO 哪些站，在3号环网上
+    '0': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '21', '18', '19', '23', '24', '33', '48', '49', '63'],
+    '1': ['11', '12', '13', '14', '15', '16', '17', '18', '19', '25', '26', '27', '28', '29', '30', '31', '32'],
+    '2': ['41', '42', '43', '44', '45', '47', '48', '49', '55', '56', '57', '58', '59', '60', '61', '62'],
+    '3': ['10', '22', '25', '27', '28', '29', '30', '31', '55', '57', '58', '59', '61', '60']
 }
 
 
@@ -105,9 +106,6 @@ def query_firmnet(name, order, collection):
     :return offset_value: string, offset值
     '''
 
-    # warning_info = ['Safety System BUS(offset_download_1.csv)', 'Safety BUS Train A(offset_download_2.csv)', \
-    #                 'Safety BUS Train B(offset_download_3.csv)', 'HM Data BUS(offset_download_4.csv)']
-
     # 下面这个list comprehension的意图：找到 name 所在的行
     # 1. 遍历data中第ring-1个元素所对应的二维数组，找到 name 所在的环网的数据
     # 2. 如果row[2]点名 == name，并且row[1]的内容为send或者dss，
@@ -150,6 +148,15 @@ def query_datalink(name, order, collection):
     :return offset_value: string, offset值
     '''
     offset_value = False
+
+    for row in collection:
+        if name.lower() == row[1].lower():
+            offset_value = row[11]
+
+    if not offset_value:
+        # DEBUG
+        print('%s 没找到' % name)
+
     return offset_value
 
 
@@ -189,8 +196,9 @@ def get_datalink_data(netdev_files):
     datalink_data = []
     for netdev_file in netdev_files:
         # 用文件名的倒数第5位的数字，判断netdev中是否包含datalink
-        sequence = netdev_file[-5]
-        if sequence in DATALINK_SEQ:
+        # sequence = netdev_file[-5]
+        sequence = re.findall(r'\d+', netdev_file)[0]
+        if sequence in DATALINK_FIRMNET_SEQ:
             # print('sequence is %s' % sequence)
             with open(netdev_file, 'r', encoding='gbk') as n_f:
                 data = list(csv.reader(n_f))
@@ -198,7 +206,7 @@ def get_datalink_data(netdev_files):
                 datalink_data.extend([row for row in data if row[5].lower()=='send' and '环' not in row[10]])
 
     # print(len(datalink_data))
-    # print(datalink_data)
+
     return datalink_data
 
 
@@ -238,6 +246,7 @@ def sync_offset(netdev_file, firmnet_data, datalink_data):
         # 提取netdev_n.csv中的n，作为order
         order = basename[-5]
         offset_value = 'not found'
+
         # 如果文件中只有环网的点：
         if order in FIRMNET_SEQ:
             for row in netdev_list:
@@ -252,7 +261,8 @@ def sync_offset(netdev_file, firmnet_data, datalink_data):
             # 把相关内容写入到csv.writer中去
             writer.writerows(netdev_list)
 
-        elif order in DATALINK_SEQ:
+        # 如果文件中既有环网的点，也有datalink的点：
+        elif order in DATALINK_FIRMNET_SEQ:
             for row in netdev_list:
                 # 如果该行是个环点
                 if '环点' in row[10]:
@@ -261,7 +271,7 @@ def sync_offset(netdev_file, firmnet_data, datalink_data):
                 # 如果该行是个datalink点，且它是一个recv或者dsr类型，则处理它
                 elif '环点' not in row[10] and row[5].lower() in ['recv', 'dsr']:
                     offset_value = query_datalink(row[1], order , datalink_data)
-                    # print('datalink')
+                    # print(offset_value)
 
                 # offset写入
                 if offset_value:
