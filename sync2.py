@@ -21,8 +21,14 @@ pp = pprint.PrettyPrinter(indent=4)
 
 # TODO 确定哪些netdev.csv中包含datalink
 # TODO 1. 确定那些清单中有firmnet和datalink，哪些只有firmnent
-FIRMNET_SEQ = [str(x) for x in range(13, 60)] # 返回13到59的一个list
-DATALINK_SEQ = [str(x) for x in range(1, 13)] # 返回1 到12的一个list
+
+# 有datalink和环网通信
+DATALINK_FIRMNET_SEQ = ['1', '2', '3', '4', '5', '6', '7', '8', '11', '12', '17', '18', '19', '41', '42', '47', '48', '49']
+
+# 只有环网通信的站
+# 一个项目的最大站号是63
+FIRMNET_SEQ = [str(x) for x in range(1, 64) if str(x) not in DATALINK_FIRMNET_SEQ]
+
 NET_NODE_RELATION = {
     '0': [str(x) for x in range(1, 9)], # RPC1,2,3,4, 在0号环网SSB
     '1': ['12', '13', '14'],     # TODO 哪些站，在1号环网上
@@ -109,10 +115,6 @@ def query_firmnet(name, order, collection):
     # target_row = [row for row in collection[order-1] if row[2].lower() == name.lower() and
     #               (row[1].lower() == 'send' or row[1].lower() == 'dss')]
 
-    # DEBUG
-    # print('order is %s' % order)
-    # print('collection is')
-    # pp.pprint(collection)
 
     select_net = False
     for net, nodes in NET_NODE_RELATION.items():
@@ -122,7 +124,13 @@ def query_firmnet(name, order, collection):
     # if not right_net:
     #     pass # TODO 此处需要处理异常：netdev_n中的n有问题
 
-    print('select net is %s' % select_net)
+    #
+    # DEBUG
+    #
+    # print('select net is %s' % select_net)
+    # print('collection[%s] is ' % select_net)
+    # pp.pprint(collection[int(select_net)])
+
     offset_value = False
     for row in collection[int(select_net)]:
         if name.lower() == row[2].lower():
@@ -131,6 +139,7 @@ def query_firmnet(name, order, collection):
     # if not offset_value:
     #     pass # TODO 此处需要处理异常：collection中没有找到name
 
+    # print('offset value is %s' % offset_value)
     return offset_value
 
 def query_datalink(name, order, collection):
@@ -167,8 +176,8 @@ def get_firmnet_data(firmnet_files):
             firmnet_data[int(sequence) - 1] = [row for row in data if row[1].lower()=='send' or row[1].lower()=='dss']
 
     # DEBUG
-    print('firmnet data is')
-    pp.pprint(firmnet_data)
+    # print('firmnet data is')
+    # pp.pprint(firmnet_data)
 
     return firmnet_data
 
@@ -188,7 +197,7 @@ def get_datalink_data(netdev_files):
                 # print(data)
                 datalink_data.extend([row for row in data if row[5].lower()=='send' and '环' not in row[10]])
 
-    print(len(datalink_data))
+    # print(len(datalink_data))
     # print(datalink_data)
     return datalink_data
 
@@ -228,6 +237,7 @@ def sync_offset(netdev_file, firmnet_data, datalink_data):
 
         # 提取netdev_n.csv中的n，作为order
         order = basename[-5]
+        offset_value = 'not found'
         # 如果文件中只有环网的点：
         if order in FIRMNET_SEQ:
             for row in netdev_list:
@@ -238,6 +248,7 @@ def sync_offset(netdev_file, firmnet_data, datalink_data):
 
                 if offset_value:
                     row[11] = offset_value
+                    # print('row[11] is %s' % row[11])
             # 把相关内容写入到csv.writer中去
             writer.writerows(netdev_list)
 
@@ -245,14 +256,16 @@ def sync_offset(netdev_file, firmnet_data, datalink_data):
             for row in netdev_list:
                 # 如果该行是个环点
                 if '环点' in row[10]:
+                    # print('环点')
                     offset_value = query_firmnet(row[1], order, firmnet_data)
-                    # print('name is %s' % row[1])
-                    # print('offset value is %s' % offset_value)
                 # 如果该行是个datalink点，且它是一个recv或者dsr类型，则处理它
                 elif '环点' not in row[10] and row[5].lower() in ['recv', 'dsr']:
                     offset_value = query_datalink(row[1], order , datalink_data)
-                    if offset_value:
-                        row[11] = offset_value
+                    # print('datalink')
+
+                # offset写入
+                if offset_value:
+                    row[11] = offset_value
             # 把相关内容写入到csv.writer中去
             writer.writerows(netdev_list)
 
