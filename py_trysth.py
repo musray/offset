@@ -1,3 +1,6 @@
+import pprint
+pp = pprint.PrettyPrinter(indent=4)
+
 seq = ['1', '2', '3', '4', '5']
 
 def func(order):
@@ -34,5 +37,11 @@ import re
 name = 'netdev_199.csv'
 
 matchObj = re.findall(r'\d+', name)
-print(matchObj)
+# print(matchObj)
+
+
+DATALINK_FIRMNET_SEQ = ['1', '2', '3', '4', '5', '6', '7', '8', '11', '12', '17', \
+                        '18', '19', '41', '42', '47', '48', '49']
+
+# pp.pprint(DATALINK_FIRMNET_SEQ)
 

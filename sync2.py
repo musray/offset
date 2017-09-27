@@ -4,11 +4,10 @@ import sys
 import os
 import csv
 import re
-# from operator import itemgetter
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
 
-# ---------------------------------------------- #
+# ------------------------------------------------------- #
 #                 Abstraction
 # 实现路径：
 # 1. 把firmnet.csv和netdev.csv逐个读一遍，所有send点，放到一个datapool(list)里
@@ -18,13 +17,12 @@ pp = pprint.PrettyPrinter(indent=4)
 #   - 去datapool里找这个Receive对应的send点
 #   - 把send的offset，写到Receive里
 #   - 生成sync_netdev.csv，包含所有send，receive的offset
-# ---------------------------------------------- #
+# ------------------------------------------------------- #
 
-# TODO 确定哪些netdev.csv中包含datalink
-# TODO 1. 确定那些清单中有firmnet和datalink，哪些只有firmnent
 
 # 有datalink和环网通信
-DATALINK_FIRMNET_SEQ = ['1', '2', '3', '4', '5', '6', '7', '8', '11', '12', '17', '18', '19', '41', '42', '47', '48', '49']
+DATALINK_FIRMNET_SEQ = ['1', '2', '3', '4', '5', '6', '7', '8', '11', '12', '17',\
+                        '18', '19', '41', '42', '47', '48', '49']
 
 # 只有环网通信的站
 # 一个项目的最大站号是63
@@ -140,6 +138,7 @@ def query_firmnet(name, order, collection):
     # print('offset value is %s' % offset_value)
     return offset_value
 
+
 def query_datalink(name, order, collection):
     '''
     :param name: string, 信号名 
@@ -195,14 +194,14 @@ def get_datalink_data(netdev_files):
     # 新建一个list，用来保存所有netdev文件里datalink的内容
     datalink_data = []
     for netdev_file in netdev_files:
-        # 用文件名的倒数第5位的数字，判断netdev中是否包含datalink
-        # sequence = netdev_file[-5]
+        # 用re提取文件名中的数字
         sequence = re.findall(r'\d+', netdev_file)[0]
+        # 如果数字在DATALINK_FIRMNET_SEQ中能找到
+        # 说明是一个既有环网，又有datalink的清单
         if sequence in DATALINK_FIRMNET_SEQ:
-            # print('sequence is %s' % sequence)
             with open(netdev_file, 'r', encoding='gbk') as n_f:
                 data = list(csv.reader(n_f))
-                # print(data)
+                # 找出没有'环网'字样，而且是send类型的点
                 datalink_data.extend([row for row in data if row[5].lower()=='send' and '环' not in row[10]])
 
     # print(len(datalink_data))
