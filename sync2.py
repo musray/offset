@@ -243,7 +243,8 @@ def sync_offset(netdev_file, firmnet_data, datalink_data):
         # 2. row[5]中的设备类型如果是send，则：用row[1]的点名去firmnet_data里找相应的点，偏移地址写到netdev_list的row[11]中
 
         # 提取netdev_n.csv中的n，作为order
-        order = basename[-5]
+        # order = basename[-5]
+        order = re.findall(r'\d+', basename)[0]
         offset_value = 'not found'
 
         # 如果文件中只有环网的点：
