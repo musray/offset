@@ -6,3 +6,4 @@ trial/*
 .idea/
 dist/*
 *.swp
+*.zip
