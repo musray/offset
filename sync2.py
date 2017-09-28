@@ -20,8 +20,9 @@ pp = pprint.PrettyPrinter(indent=4)
 # ------------------------------------------------------- #
 
 
-# 有datalink和环网通信
-DATALINK_FIRMNET_SEQ = ['1', '2', '3', '4', '5', '6', '7', '8', '11', '12', '17',\
+# 有datalink和环网通信的站
+# list中的数字是站号，人工确定
+DATALINK_FIRMNET_SEQ = ['1', '2', '3', '4', '5', '6', '7', '8', '11', '12', '17',
                         '18', '19', '41', '42', '47', '48', '49']
 
 # 只有环网通信的站
@@ -96,11 +97,12 @@ def file_validation(csv_list):
     return netdev_list, firmnet_list
 
 
-def query_firmnet(name, order, collection):
+def query_firmnet(name, order, collection, ring='0'):
     '''
     :param name: string, 信号名 
     :param order: string, 站号
-    :param collection: 三维数组，环网数据
+    :param collection: 二维数组，环网数据
+    :param ring: string，环号
     :return offset_value: string, offset值
     '''
 
@@ -112,10 +114,16 @@ def query_firmnet(name, order, collection):
     #               (row[1].lower() == 'send' or row[1].lower() == 'dss')]
 
 
+    # 针对DTC等有datalink，和两个环网的情况，增加了if not ring的条件判断
+    # 如果ring已经是1，2，3，4的某一个值，那让select_net直接等于ring
+    # 否则，使用order在NET_NODE_RELATION里找对应的ring
     select_net = False
-    for net, nodes in NET_NODE_RELATION.items():
-        if order in nodes:
-            select_net = net
+    if ring != '0':
+        select_net = str(int(ring) - 1) # 清单里的环网从1开始，但firmnent_data里是从0开始
+    else:
+        for net, nodes in NET_NODE_RELATION.items():
+            if order in nodes:
+                select_net = net
 
     # if not right_net:
     #     pass # TODO 此处需要处理异常：netdev_n中的n有问题
@@ -169,7 +177,7 @@ def get_firmnet_data(firmnet_files):
 
             # 尝试在文件名的倒数第5位获取数字，分别代表一种firmnet环网：1：SSB；2：SB_A；3：SB_B；4：HM
             try:
-                sequence = firmnet_file[-5]
+                sequence = re.findall(r'\d+', firmnet_file)[0]
                 if not sequence in ['1', '2', '3', '4']:
                     input('%s 文件命名错误，文件名最后一位必须是1-4的数字。请检查文件名后重新运行程序。\n按任意键退出...')
 
@@ -243,7 +251,6 @@ def sync_offset(netdev_file, firmnet_data, datalink_data):
         # 2. row[5]中的设备类型如果是send，则：用row[1]的点名去firmnet_data里找相应的点，偏移地址写到netdev_list的row[11]中
 
         # 提取netdev_n.csv中的n，作为order
-        # order = basename[-5]
         order = re.findall(r'\d+', basename)[0]
         offset_value = 'not found'
 
@@ -261,21 +268,32 @@ def sync_offset(netdev_file, firmnet_data, datalink_data):
             # 把相关内容写入到csv.writer中去
             writer.writerows(netdev_list)
 
+        #
+        # new thought
+        #
+        # 如果文件中既有环网的点，也有datalink的点：
+        # 看row[10]:
+        # 有环点，查环网；是哪个环，查哪个环
+        # 没有环点，查datalink
+
         # 如果文件中既有环网的点，也有datalink的点：
         elif order in DATALINK_FIRMNET_SEQ:
             for row in netdev_list:
                 # 如果该行是个环点
                 if '环点' in row[10]:
-                    # print('环点')
-                    offset_value = query_firmnet(row[1], order, firmnet_data)
+                    # row[1]:点名；order：文件名中的数字；ring：环号；firmnent_data: firmnet的发送数据
+                    ring = re.findall(r'\d', row[10])[0]
+                    offset_value = query_firmnet(row[1], order, firmnet_data, ring)
+                    if offset_value:
+                        row[11] = offset_value
                 # 如果该行是个datalink点，且它是一个recv或者dsr类型，则处理它
                 elif '环点' not in row[10] and row[5].lower() in ['recv', 'dsr']:
                     offset_value = query_datalink(row[1], order , datalink_data)
+                    if offset_value:
+                        row[11] = offset_value
                     # print(offset_value)
 
                 # offset写入
-                if offset_value:
-                    row[11] = offset_value
             # 把相关内容写入到csv.writer中去
             writer.writerows(netdev_list)
 
@@ -331,6 +349,7 @@ def main():
     for netdev_file in netdev_files:
         # 先cue一下焦急等待的群众：
         print('%s 处理中，请稍候...' % netdev_file)
+        # CALL
         sync_offset(netdev_file, firmnet_data, datalink_data)
         print('已完成！')
 
