@@ -45,3 +45,6 @@ DATALINK_FIRMNET_SEQ = ['1', '2', '3', '4', '5', '6', '7', '8', '11', '12', '17'
 
 # pp.pprint(DATALINK_FIRMNET_SEQ)
 
+import node_ring_relation as nrr
+
+pp.pprint(nrr.NODE_RING_RELATION)

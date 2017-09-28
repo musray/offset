@@ -7,3 +7,4 @@ trial/*
 dist/*
 *.swp
 *.zip
+__pycache__/

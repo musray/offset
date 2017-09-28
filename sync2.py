@@ -5,6 +5,7 @@ import os
 import csv
 import re
 import pprint
+import node_ring_relation
 pp = pprint.PrettyPrinter(indent=4)
 
 # ------------------------------------------------------- #
@@ -29,12 +30,23 @@ DATALINK_FIRMNET_SEQ = ['1', '2', '3', '4', '5', '6', '7', '8', '11', '12', '17'
 # 一个项目的最大站号是63
 FIRMNET_SEQ = [str(x) for x in range(1, 64) if str(x) not in DATALINK_FIRMNET_SEQ]
 
-NET_NODE_RELATION = {
-    '0': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '21', '18', '19', '23', '24', '33', '48', '49', '63'],
-    '1': ['11', '12', '13', '14', '15', '16', '17', '18', '19', '25', '26', '27', '28', '29', '30', '31', '32'],
-    '2': ['41', '42', '43', '44', '45', '47', '48', '49', '55', '56', '57', '58', '59', '60', '61', '62'],
-    '3': ['10', '22', '25', '27', '28', '29', '30', '31', '55', '57', '58', '59', '61', '60']
-}
+# NET_NODE_RELATION = {
+#     '0': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '21', '18', '19', '23', '24', '33', '48', '49', '63'],
+#     '1': ['11', '12', '13', '14', '15', '16', '17', '18', '19', '25', '26', '27', '28', '29', '30', '31', '32'],
+#     '2': ['41', '42', '43', '44', '45', '47', '48', '49', '55', '56', '57', '58', '59', '60', '61', '62'],
+#     '3': ['10', '22', '25', '27', '28', '29', '30', '31', '55', '57', '58', '59', '61', '60']
+# }
+
+#
+#
+# NODE_RING_RELATION = {
+#     '1': ['1'],
+#     '2': ['1'],
+#     '3': ['1'],
+#     ......
+#     '63': ['3', '4']
+#
+NODE_RING_RELATION = node_ring_relation.NODE_RING_RELATION
 
 
 def ttest_get_firmnet_data(data):
@@ -97,7 +109,7 @@ def file_validation(csv_list):
     return netdev_list, firmnet_list
 
 
-def query_firmnet(name, order, collection, ring='0'):
+def query_firmnet(name, order, collection, rings):
     '''
     :param name: string, 信号名 
     :param order: string, 站号
@@ -117,13 +129,24 @@ def query_firmnet(name, order, collection, ring='0'):
     # 针对DTC等有datalink，和两个环网的情况，增加了if not ring的条件判断
     # 如果ring已经是1，2，3，4的某一个值，那让select_net直接等于ring
     # 否则，使用order在NET_NODE_RELATION里找对应的ring
-    select_net = False
-    if ring != '0':
-        select_net = str(int(ring) - 1) # 清单里的环网从1开始，但firmnent_data里是从0开始
+    offset_value = False
+    if rings:
+        # select_net = str(int(ring) - 1) # 清单里的环网从1开始，但firmnent_data里是从0开始
+        # rings是一个清单代表的实际控制站可能在的环网号
+        # ring是其中一个环网号
+        for ring in rings:
+            for row in collection[int(ring) - 1]:
+                if name.lower() == row[2].lower():
+                    # 如果便宜地址所在列有内容，说明当前点确实在目前查询的环网内
+                    if row[6]:
+                        offset_value = row[6]
+                        break
     else:
-        for net, nodes in NET_NODE_RELATION.items():
-            if order in nodes:
-                select_net = net
+        # for net, nodes in NET_NODE_RELATION.items():
+        #     if order in nodes:
+        #         select_net = net
+        print('获得环网数据失败，退出。。。')
+        sys.exit(1)
 
     # if not right_net:
     #     pass # TODO 此处需要处理异常：netdev_n中的n有问题
@@ -135,10 +158,10 @@ def query_firmnet(name, order, collection, ring='0'):
     # print('collection[%s] is ' % select_net)
     # pp.pprint(collection[int(select_net)])
 
-    offset_value = False
-    for row in collection[int(select_net)]:
-        if name.lower() == row[2].lower():
-            offset_value = row[6] # offset_download的第6列
+    # offset_value = False
+    # for row in collection[int(select_net)]:
+    #     if name.lower() == row[2].lower():
+    #         offset_value = row[6] # offset_download的第6列
 
     # if not offset_value:
     #     pass # TODO 此处需要处理异常：collection中没有找到name
@@ -240,6 +263,7 @@ def sync_offset(netdev_file, firmnet_data, datalink_data):
         #   - 调用firmnet_data中对应环的数据
         #   - 查到这个点名对应的行，返回offset值
         #   - 填回list中
+        #   - SCID的表，没有"环点"的说明，所以要找两遍（自己所在的SA/SB找一遍，HM找一遍）
         #
         # case2 如果是firmnet和datalink都有：
         #   - 遍历所有点，找receive的点
@@ -256,11 +280,12 @@ def sync_offset(netdev_file, firmnet_data, datalink_data):
 
         # 如果文件中只有环网的点：
         if order in FIRMNET_SEQ:
+            rings = NODE_RING_RELATION[order]
             for row in netdev_list:
                 # if row[5].lower() == 'recv':
                 # 正式获得offset的值
                 # offset_value可能的值是False或者一个'0'， '1'， '2'。。。的字符串
-                offset_value = query_firmnet(row[1], order, firmnet_data)
+                offset_value = query_firmnet(row[1], order, firmnet_data, rings)
 
                 if offset_value:
                     row[11] = offset_value
@@ -282,8 +307,8 @@ def sync_offset(netdev_file, firmnet_data, datalink_data):
                 # 如果该行是个环点
                 if '环点' in row[10]:
                     # row[1]:点名；order：文件名中的数字；ring：环号；firmnent_data: firmnet的发送数据
-                    ring = re.findall(r'\d', row[10])[0]
-                    offset_value = query_firmnet(row[1], order, firmnet_data, ring)
+                    rings = NODE_RING_RELATION[order]
+                    offset_value = query_firmnet(row[1], order, firmnet_data, rings)
                     if offset_value:
                         row[11] = offset_value
                 # 如果该行是个datalink点，且它是一个recv或者dsr类型，则处理它
