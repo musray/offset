@@ -137,7 +137,7 @@ def query_firmnet(name, order, collection, rings):
         for ring in rings:
             for row in collection[int(ring) - 1]:
                 if name.lower() == row[2].lower():
-                    # 如果便宜地址所在列有内容，说明当前点确实在目前查询的环网内
+                    # 如果偏移地址所在列有内容，说明当前点确实在目前查询的环网内
                     if row[6]:
                         offset_value = row[6]
                         break
